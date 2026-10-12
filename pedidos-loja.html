@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitações de Peças | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/pedidos-loja.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="feed.html" class="logo"><b>PEÇA</b><span>BRUTA</span></a>
+            <button class="nav-btn btn-logout" type="button" onclick="window.location.href='feed.html'"><i class="fas fa-arrow-left"></i> VOLTAR</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="header-top">
+                <div class="user-greeting">
+                    <h1>MURAL DE <span style="color: var(--primary);">SOLICITAÇÕES</span></h1>
+                    <p>Responda aos clientes que estão procurando peças da sua categoria.</p>
+                </div>
+            </div>
+
+            <aside class="solicitacoes-instrucoes" role="note" aria-labelledby="titulo-instrucoes">
+                <h2 id="titulo-instrucoes">💡 Como atender a uma solicitação:</h2>
+                <ol>
+                    <li><strong>Você tem a peça?</strong> Dependendo da solicitação, cadastre o item no seu painel utilizando a categoria <strong>Produto Reservado</strong> (para ocultar da vitrine pública, Caso desejar) e copie o link gerado.</li>
+                    <li>Retorne a este mural e clique em <strong>Mandar Mensagem</strong>. O sistema enviará uma saudação automática. Cole o link do produto no chat para o cliente avaliar.</li>
+                    <li class="passo-crucial"><strong>⚠️ ATENÇÃO - PASSO CRUCIAL:</strong> Assim que o cliente concordar com a compra, clique imediatamente no botão <strong>Esse pedido já é meu</strong> aqui no mural! Isso retira a solicitação da visão dos outros lojistas e garante que ninguém mais mande mensagens para o seu cliente.</li>
+                </ol>
+            </aside>
+
+            <div class="filtros-solicitacoes">
+                <label class="busca-solicitacoes">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input id="busca-solicitacoes" type="search" placeholder="Pesquisar por peça, categoria, cliente ou cidade..." autocomplete="off" aria-label="Pesquisar solicitações">
+                </label>
+                <label class="filtro-categoria-wrap" for="filtroCategoria">
+                    <span>CATEGORIA</span>
+                    <select id="filtroCategoria" class="filter-select filtro-categoria">
+                        <option value="">Todos...</option>
+                    </select>
+                </label>
+            </div>
+
+            <p id="estado-solicitacoes" class="estado-solicitacoes" role="status" aria-live="polite">Carregando solicitações abertas…</p>
+            <div class="solicitacoes-grid" id="lista-solicitacoes">
+            </div>
+        </main>
+    </div>
+
+    <script src="JS/pedidos-loja.js"></script>
+</body>
+</html>

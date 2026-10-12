@@ -1,0 +1,140 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; font-family: 'Inter', sans-serif; color: #fff; }
+
+.cart-header {
+    padding: 20px; border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.back-link { color: #888; text-decoration: none; font-size: 12px; font-weight: 800; }
+.logo { font-family: 'Orbitron'; font-size: 1.2rem; }
+.logo span { color: #ff4d00; }
+
+.cart-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+h1 { font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 30px; border-left: 4px solid #ff4d00; padding-left: 15px; }
+
+.cart-list { display: flex; flex-direction: column; gap: 15px; }
+
+.cart-item {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    display: flex; align-items: center; padding: 15px; gap: 20px;
+}
+.cart-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
+.item-info { flex: 1; }
+.item-info h3 { font-size: 1rem; margin-bottom: 5px; }
+.item-info p { font-size: 0.7rem; color: #555; text-transform: uppercase; }
+.price { color: #ff4d00; font-weight: 900; display: block; margin-top: 5px; }
+
+.remove-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; filter: grayscale(1); transition: 0.3s; }
+.remove-btn:hover { filter: grayscale(0); transform: scale(1.1); }
+
+.cart-summary {
+    margin-top: 30px; background: #111; padding: 25px;
+    border: 1px solid #ff4d00; text-align: right;
+}
+.summary-row { font-family: 'Orbitron'; font-size: 1.2rem; margin-bottom: 20px; }
+#cart-total { color: #ff4d00; margin-left: 15px; }
+
+.btn-checkout {
+    background: #ff4d00; color: #fff; border: none;
+    padding: 15px 40px; font-family: 'Orbitron'; font-weight: 900;
+    cursor: pointer; transition: 0.3s; width: 100%;
+}
+.btn-checkout:hover { background: #e64500; letter-spacing: 2px; }
+
+.empty-msg { color: #444; text-align: center; padding: 50px; font-style: italic; }
+
+ /* Estilização do Logo e Efeitos */
+        .logo { color: white; transition: 0.3s ease; display: inline-block; cursor: pointer; text-decoration: none; }
+        .logo span { color: #ff4d00; }
+        .logo-link { text-decoration: none; }
+        .logo-link:hover .logo { 
+            transform: scale(1.05); 
+            text-shadow: 0 0 15px rgba(255, 77, 0, 0.3);
+        }
+        
+        /* Ajuste da Seta de Voltar */
+        .back-link { 
+            text-decoration: none; 
+            font-weight: 900; 
+            font-size: 24px; 
+            color: #ff4d00; 
+            transition: 0.3s;
+        }
+        .back-link:hover { transform: translateX(-5px); }
+
+       
+        /* ========================================= */
+/* AJUSTES PARA CELULAR (CARRINHO)           */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* Reduz o respiro geral para aproveitar a tela pequena */
+    .cart-container {
+        margin: 20px auto !important;
+        padding: 0 15px !important;
+    }
+
+    h1 {
+        font-size: 1.2rem !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Ajuste do cartão da peça no carrinho */
+    .cart-item {
+        padding: 15px 10px !important;
+        gap: 12px !important;
+        align-items: flex-start !important; /* Alinha tudo pelo topo, não pelo meio */
+        position: relative !important; /* Permite que a lixeira flutue dentro dele */
+    }
+
+    /* Reduz a imagem levemente */
+    .cart-item img {
+        width: 65px !important;
+        height: 65px !important;
+    }
+
+    /* Evita que o título do produto encoste na lixeira */
+    .item-info h3 {
+        font-size: 0.9rem !important;
+        padding-right: 25px !important; 
+        margin-bottom: 8px !important;
+    }
+
+    .item-info p {
+        font-size: 0.65rem !important;
+    }
+
+    .price {
+        font-size: 0.95rem !important;
+    }
+
+    /* O Segredo: Lixeira flutuando no canto superior direito */
+    .remove-btn {
+        position: absolute !important;
+        top: 15px !important;
+        right: 15px !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* Arruma o painel de pagamento no final */
+    .cart-summary {
+        padding: 20px 15px !important;
+        margin-top: 20px !important;
+    }
+
+    /* Coloca o texto "Total" de um lado e o valor do outro */
+    .summary-row {
+        font-size: 1rem !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    #cart-total {
+        margin-left: 0 !important;
+    }
+
+    .btn-checkout {
+        padding: 15px !important;
+        font-size: 0.9rem !important;
+    }
+}

@@ -1,0 +1,151 @@
+body {
+    background-color: #0a0a0a;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    margin: 0;
+}
+
+.checkout-wrapper {
+    background-color: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 5px 20px rgba(255, 77, 0, 0.05);
+}
+
+.resumo-pedido {
+    background-color: #1a1a1a;
+    border: 1px dashed #444;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.resumo-pedido h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #ff4d00;
+    font-size: 14px;
+    margin-top: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.resumo-pedido h3 {
+    margin: 15px 0 5px 0;
+    font-size: 18px;
+    color: #ddd;
+}
+
+.preco-destaque {
+    color: #00cc66;
+    font-size: 28px;
+    font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.endereco-entrega {
+    margin-bottom: 30px;
+}
+
+.endereco-entrega h2 {
+    color: #ff4d00;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.endereco-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px 14px;
+    align-items: center;
+}
+
+.endereco-grid label {
+    color: #ddd;
+    font-size: 14px;
+}
+
+.endereco-grid input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a1a;
+    color: #fff;
+    font: inherit;
+}
+
+.endereco-grid input:focus {
+    border-color: #ff4d00;
+    outline: none;
+}
+
+@media (max-width: 480px) {
+    .endereco-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .endereco-grid input {
+        margin-bottom: 8px;
+    }
+}
+
+
+
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (CHECKOUT E TOTAL)   */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* Diminui o espaço inútil nas bordas pretas da tela */
+    body {
+        padding: 20px 15px !important;
+    }
+
+    /* Diminui a borda da caixa principal para dar mais espaço aos inputs */
+    .checkout-wrapper {
+        padding: 20px 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Ajuste da caixa de Total (Resumo) */
+    .resumo-pedido {
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Reduz levemente o tamanho do preço para não quebrar a linha */
+    .preco-destaque {
+        font-size: 24px !important;
+    }
+
+    /* Empilha as etiquetas (labels) e as caixas de texto perfeitamente */
+    .endereco-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        align-items: stretch !important;
+    }
+
+    /* Ajuste fino dos campos de digitação */
+    .endereco-grid label {
+        font-size: 13px !important;
+        margin-top: 8px !important;
+    }
+
+    .endereco-grid input {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+        padding: 12px !important; /* Facilita o clique com o dedo */
+    }
+}

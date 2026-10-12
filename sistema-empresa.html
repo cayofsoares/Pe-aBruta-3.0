@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Hub | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/sistema-empresa.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- CONTAINER DE NOTIFICAÇÕES -->
+    <div id="toast-container"></div>
+
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <a href="feed.html" class="logo"><b>PEÇA</b><span>BRUTA</span></a>
+            
+            <!-- REDIRECIONAMENTO INTEGRADO AO PAINEL LOJISTA -->
+            <button class="btn-publish" style="width:100%" onclick="iniciarNovoProduto()">
+                <i class="fas fa-plus-circle"></i> NOVO PRODUTO
+            </button>
+
+            <div class="nav-group">
+                <button class="nav-btn active" type="button"><i class="fas fa-store"></i> Perfil da Empresa</button>
+            </div>
+
+            <button class="nav-btn btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> SAIR DO PAINEL</button>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="content">
+            <div class="header-top">
+                <div class="user-greeting">
+                    <h1>BEM-VINDO, <span id="headerLojaNome" style="color: var(--primary);">LOJISTA</span></h1>
+                    <p>Gerencie as informações e a Chave PIX da sua empresa.</p>
+                </div>
+                <a href="feed.html" class="btn-link"><i class="fas fa-external-link-alt"></i> Ver Loja Pública</a>
+            </div>
+
+            <section id="perfil" class="section active">
+                <div class="section-title">Perfil da Empresa</div>
+                <div class="glass-card" style="max-width:900px; margin-bottom:24px; padding:24px; border:1px solid rgba(255,100,70,0.34); border-left:4px solid #ff5a36; background:linear-gradient(145deg, rgba(55,24,20,0.96), rgba(27,18,17,0.98)); box-shadow:0 14px 36px rgba(0,0,0,0.24); color:#f0d7d1; font-size:14px; line-height:1.8;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; color:#ff8b70; font-family:'Orbitron',sans-serif; font-size:14px; font-weight:700;">
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                        <span>Liberação de Repasses e Segurança</span>
+                    </div>
+                    <p style="margin:0 0 12px;">Para garantir a máxima segurança em nosso marketplace, a Peça Bruta utiliza o sistema de pagamento sob custódia.</p>
+                    <p style="margin:0 0 12px;">O valor líquido das suas vendas fica protegido e é liberado para transferência (via PIX) <strong style="color:#fff;">assim que o cliente confirmar o recebimento do pedido</strong> na plataforma. Essa medida protege tanto a sua loja quanto o comprador final.</p>
+                    <p style="margin:0; color:#ffd5a8;"><strong>Atenção:</strong> Mantenha a sua Chave PIX sempre atualizada no <em>Perfil da Loja</em> para evitar atrasos na transferência após a entrega.</p>
+                </div>
+                <div class="glass-card">
+                    <form onsubmit="atualizarPerfilAPI(event)">
+                        <div class="grid-form">
+                            <div class="form-group full-width">
+                                <label>Logo da Empresa (URL da Imagem)</label>
+                                <input type="url" id="perfLogo" placeholder="https://exemplo.com/logo.jpg">
+                            </div>
+                            <div class="form-group">
+                                <label>Nome Fantasia</label>
+                                <input type="text" id="perfNome" required>
+                            </div>
+                            <div class="form-group">
+                                <label>E-mail de Login</label>
+                                <input type="email" id="perfEmail" readonly title="Imutável por segurança">
+                            </div>
+                            <div class="form-group">
+                                <label>CNPJ</label>
+                                <input type="text" id="perfCnpj" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>WhatsApp de Vendas</label>
+                                <input type="text" id="perfWhats" placeholder="(00) 00000-0000">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="perfChavePix">Chave PIX para repasses</label>
+                                <input type="text" id="perfChavePix" placeholder="Informe a chave PIX da loja" autocomplete="off" maxlength="140" required>
+                                <small style="display:block; margin-top:6px; color:var(--text-dim);">Usaremos esta chave para os repasses manuais da loja.</small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Biografia da Loja</label>
+                                <textarea id="perfBio" rows="4" placeholder="Descreva sua empresa, especialidades, termos de garantia..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-action" id="btnSalvarPerfil" style="margin-top: 15px;"><i class="fas fa-save"></i> SALVAR ALTERAÇÕES</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+<script src="JS/sistema-empresa.js"></script>
+</body>
+</html>

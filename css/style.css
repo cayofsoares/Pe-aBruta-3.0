@@ -1,0 +1,164 @@
+:root {
+    --primary-color: #ff4d00; /* Laranja Fogo/Industrial */
+    --bg-dark: #0a0a0a;
+    --card-dark: #161616;
+    --text-light: #f5f5f5;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 6%;
+    position: absolute;
+    width: 88%;
+    z-index: 10;
+}
+
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: var(--primary-color);
+}
+
+.btn-login {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 10px 25px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+.btn-login:hover {
+    background: white;
+    color: black;
+}
+
+.hero {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), 
+                url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070') center/cover;
+}
+
+.main-content {
+    text-align: center;
+    z-index: 5;
+}
+
+.titulo-impacto {
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.titulo-impacto span {
+    color: var(--primary-color);
+}
+
+.subtitulo {
+    font-size: 1.2rem;
+    color: #999;
+    margin-bottom: 50px;
+}
+
+/* Grupo de Botões Centrais */
+.action-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-main {
+    padding: 22px 40px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-transform: uppercase;
+}
+
+.search-btn {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 10px 30px rgba(255, 77, 0, 0.4);
+}
+
+.partner-btn {
+    background-color: #f5f5f5;
+    color: #000;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+
+.btn-main:hover {
+    transform: translateY(-10px) scale(1.02);
+}
+
+.search-btn:hover {
+    box-shadow: 0 15px 40px rgba(255, 77, 0, 0.6);
+}
+
+.icon {
+    font-size: 1.4rem;
+}
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (RESPONSIVIDADE)     */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* Diminui o tamanho do título para caber na tela */
+    .titulo-impacto {
+        font-size: 28px !important;
+        line-height: 1.2 !important;
+    }
+    
+    /* Ajusta o subtítulo */
+    .subtitulo {
+        font-size: 16px !important;
+        padding: 0 15px;
+    }
+    
+    /* Empilha os botões um em cima do outro */
+    .action-group {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 15px !important;
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
+    
+    /* Faz os botões esticarem de ponta a ponta */
+    .btn-main, .action-group a {
+        width: 100% !important;
+        display: block !important;
+    }
+}

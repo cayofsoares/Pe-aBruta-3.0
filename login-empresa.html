@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Parceiro | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/login-empresa.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">  
+</head>
+<body>
+    <div class="container">
+        <a href="feed.html" class="logo-container">
+            <div class="logo-text">
+                <span class="logo-peca">PEÇA</span><span class="logo-bruta">BRUTA</span>
+            </div>
+        </a>
+
+        <div class="auth-card">
+            <h1>PAINEL DO PARCEIRO</h1>
+            <div id="msgErro" class="msg-erro"></div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>E-mail Corporativo</label>
+                    <input type="email" id="email" placeholder="loja@exemplo.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Senha de Acesso</label>
+                    <input type="password" id="senha" class="pass-input" placeholder="••••••••" required>
+                    <div class="toggle-password" onclick="togglePass()">
+                        <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    </div>
+                </div>
+
+                <a href="#" class="forgot-pass" onclick="alert('Contate o suporte para recuperar sua senha.')">ESQUECEU A SENHA?</a>
+                <button type="submit" class="btn-login">ENTRAR AGORA</button>
+            </form>
+
+            <a href="cadastro-empresa.html" class="btn-back-register">QUERO ME CADASTRAR</a>
+        </div>
+    </div>
+    <!-- Importação do arquivo JavaScript externo -->
+    <script src="JS/login-empresa.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Mensagens | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/mensagens.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    
+    <div class="app-container">
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar-panel">
+            <div class="sidebar-header">
+                <button class="btn-voltar" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+                <h1 class="logo">PEÇA<span>BRUTA</span></h1>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="inputBusca" placeholder="Buscar parceiro oficial..." oninput="filtrarParceiros()">
+            </div>
+
+            <div class="stores-list" id="listaParceiros">
+                <p style="text-align:center; color:#555; font-size:12px; margin-top:20px;">Carregando lojas do servidor...</p>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <main class="chat-panel">
+            
+            <!-- CABEÇALHO DO CHAT (Oculto no início) -->
+            <header class="chat-header" id="chatHeader" style="display: none;">
+                <div class="chat-header-info">
+                    <div class="avatar" id="chatAvatar">L</div>
+                    <div class="details">
+                        <h2 id="chatNomeLoja">Nome da Loja</h2>
+                        <span class="status"><i class="fas fa-check-circle"></i> Parceiro Oficial</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CORPO: TELA VAZIA OU MENSAGENS -->
+            <div class="chat-body" id="chatBody">
+                
+                <!-- Tela Vazia -->
+                <div class="empty-state" id="estadoVazio">
+                    <div class="empty-icon"><i class="far fa-paper-plane"></i></div>
+                    <h3>Central de Negociações</h3>
+                    <p>Selecione um parceiro na lista ao lado para iniciar o atendimento.</p>
+                </div>
+
+                <!-- Chat Ativo (Oculto no início) -->
+                <div class="chat-messages" id="chatBox" style="display: none;">
+                    <!-- Balões entram aqui -->
+                </div>
+
+            </div>
+
+            <!-- BARRA DE DIGITAÇÃO (Oculta no início) -->
+            <footer class="chat-input" id="areaDigitacao" style="display: none;">
+                <input type="text" id="inputMensagem" placeholder="Escreva sua mensagem aqui..." onkeypress="verificarEnter(event)">
+                <button class="btn-send" onclick="enviarMensagem()"><i class="fas fa-paper-plane"></i></button>
+            </footer>
+        </main>
+    </div>
+
+    <script src="JS/mensagens.js"></script>
+</body>
+</html>

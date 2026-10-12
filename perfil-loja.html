@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil da Loja | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/perfil-loja.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="feed.html" class="logo">PEÇA<span>BRUTA</span></a>
+        <button class="btn btn-following" onclick="location.href='feed.html'">VOLTAR</button>
+    </nav>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="avatar-area">
+                <div class="avatar-glow">
+                    <img id="shopImg" src="" style="display: none;">
+                    <span id="shopInitial" class="avatar-initial"></span>
+                </div>
+            </div>
+
+            <div class="shop-info">
+                <h1 id="shopName">CARREGANDO...</h1>
+                <div class="stats-grid">
+                    <div class="stat-box"><b id="numPosts">0</b><span>Publicações</span></div>
+                    <div class="stat-box"><b id="numFollowers">0</b><span>Seguidores</span></div>
+                </div>
+                <p id="shopBio" style="color: #888; margin-bottom: 20px;">Carregando informações do servidor...</p>
+                
+                <div id="btnArea" class="btn-group"></div>
+            </div>
+        </div>
+
+        <main class="product-grid" id="productGrid"></main>
+    </div>
+    <script src="JS/perfil-loja.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Partner | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/cadastro-empresa.css">  
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div class="auth-card-business">
+        <a href="login-empresa.html" class="btn-login-destaque">JÁ SOU PARCEIRO (ENTRAR)</a>
+
+        <div class="header-business">
+            <h1>SOLICITAR ACESSO</h1>
+        </div>
+
+        <form id="formEmpresa" novalidate>
+            <div class="input-group">
+                <label>Razão Social / Loja</label>
+                <input type="text" id="razaoSocial" placeholder="NOME DA SUA EMPRESA" required>
+            </div>
+
+            <div class="input-group">
+                <label>CNPJ Corporativo</label>
+                <input type="text" id="cnpjInput" placeholder="00.000.000/0000-00" maxlength="18" required>
+            </div>
+
+            <div class="input-group">
+                <label>E-mail de Contato</label>
+                <input type="email" id="emailEmpresa" placeholder="loja@contato.com" required>
+            </div>
+
+            <div class="input-group">
+                <label>Senha de Acesso</label>
+                <input type="password" id="senhaEmpresa" class="pass-input" placeholder="CRIE UMA SENHA" required>
+                <div class="toggle-password" onclick="togglePass('senhaEmpresa')">
+                    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Confirmar Senha</label>
+                <input type="password" id="confirmarSenha" class="pass-input" placeholder="REPITA A SENHA" required>
+                <div class="toggle-password" onclick="togglePass('confirmarSenha')">
+                    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>WhatsApp (DDD + Número)</label>
+                <input type="tel" id="whatsappEmpresa" placeholder="(00) 00000-0000" maxlength="15" required>
+            </div>
+
+            <div class="input-group">
+                <label>Instagram (Opcional)</label>
+                <input type="text" id="instagramEmpresa" placeholder="@sualoja">
+            </div>
+
+            <div class="input-group">
+                <label>Link do Site da Empresa (Opcional)</label>
+                <input type="url" id="siteEmpresa" placeholder="https://www.seusite.com">
+            </div>
+
+            <div class="input-group checkbox-group" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 10px;">
+                <input type="checkbox" id="aceiteTermos" style="width: 16px; height: 16px; margin-top: 2px; accent-color: #ff4d00; cursor: pointer;">
+                <label for="aceiteTermos" style="margin-bottom: 0; font-size: 11px; text-transform: none; color: #888; letter-spacing: 0; line-height: 1.4;">
+                    Li e concordo com os <a href="javascript:void(0)" onclick="abrirTermos()" style="color: #ff4d00; text-decoration: underline;">Termos de Uso e Política de Privacidade</a>.
+                </label>
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-register-business">ENVIAR SOLICITAÇÃO</button>
+        </form>
+        <a href="feed.html" style="display:block; text-align:center; margin-top:30px; color:#444; text-decoration:none; font-size:10px; font-weight:bold;">← VOLTAR AO FEED</a>
+    </div>
+    <div id="successModal">
+        <div class="modal-content">
+            <h2 style="font-family:'Orbitron'; color:#ff4d00;">SOLICITAÇÃO ENVIADA</h2>
+            <p style="color:#888; font-size:14px; margin-top:15px; line-height:1.6;">
+                Sua solicitação foi recebida com sucesso. Nossa equipe analisará os dados enviados e retornará em até 2 dias úteis. Após aprovação, sua empresa poderá acessar o painel de parceiros da plataforma.
+            </p>
+            <button class="btn-modal" onclick="window.location.href='feed.html'">OK, ENTENDIDO</button>
+        </div>
+    </div>
+    <div id="termsModal">
+        <div class="modal-content" style="text-align: left; padding: 30px;">
+            <h2 style="font-family:'Orbitron'; color:#ff4d00; text-align: center; font-size: 18px; margin-bottom: 20px;">TERMOS E PRIVACIDADE</h2>
+            <div style="color:#aaa; font-size:12px; line-height:1.7; text-transform: none;">
+                <p><strong>1. NATUREZA DA PLATAFORMA:</strong> O PEÇA BRUTA atua exclusivamente como plataforma de intermediação tecnológica, conectando compradores e vendedores. Não possuímos estoque próprio e não garantimos, expressamente ou implicitamente, a qualidade, procedência, garantia ou entrega das peças anunciadas por terceiros.</p>
+                <p><strong>2. TAXA DE INTERMEDIAÇÃO:</strong> O usuário concorda com a retenção de 10% (dez por cento) sobre o valor total de cada transação concluída. Esta taxa remunera a manutenção da infraestrutura, processamento e segurança da plataforma.</p>
+                <p><strong>3. RESPONSABILIDADE E LIMITAÇÃO:</strong> O PEÇA BRUTA não se responsabiliza por danos diretos ou indiretos decorrentes de negociações entre usuários, falhas mecânicas, peças incompatíveis ou quaisquer desvios de conduta das partes. A responsabilidade por garantia e suporte pós-venda é integralmente do vendedor.</p>
+                <p><strong>4. PRIVACIDADE E LGPD:</strong> Em conformidade com a Lei nº 13.709/2018 (LGPD), seus dados são processados para fins de execução contratual. Não comercializamos dados de usuários. Reservamo-nos o direito de fornecer informações às autoridades competentes mediante ordem judicial.</p>
+                <p><strong>5. SEGURANÇA DA CONTA:</strong> É responsabilidade exclusiva do usuário manter o sigilo de sua senha. Atividades realizadas por meio de sua conta são de sua inteira responsabilidade.</p>
+            </div>
+            <button class="btn-modal" onclick="fecharTermos()" style="display: block; width: 100%; text-align: center;">FECHAR E VOLTAR</button>
+        </div>
+    </div>
+
+    <script src="JS/cadastro-empresa.js"></script>
+</body>
+</html>

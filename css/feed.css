@@ -1,0 +1,573 @@
+/* --- BASE --- */
+* { margin: 0; padding: 0; box-sizing: border-box; text-decoration: none !important; }
+body { background-color: #000; font-family: 'Inter', sans-serif; color: #fff; overflow-x: hidden; }
+
+/* --- NAVBAR --- */
+.navbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; background: #000; border-bottom: 1px solid #1a1a1a;
+    position: sticky; top: 0; z-index: 1000;
+}
+.logo { font-family: 'Orbitron'; font-weight: 900; font-size: 1.5rem; }
+.logo span { color: #ff4d00; }
+.logo-link { text-decoration: none; color: #fff; cursor: default; }
+
+/* --- BARRA DE PESQUISA COM EFEITO --- */
+.search-box { display: flex; flex: 1; max-width: 500px; margin: 0 20px; }
+.search-box input { 
+    width: 100%; padding: 8px 15px; background: #0a0a0a; border: 1px solid #333; 
+    color: #fff; border-radius: 4px 0 0 4px; transition: 0.3s;
+}
+.search-box input:focus { 
+    border-color: #ff4d00; 
+    box-shadow: 0 0 10px rgba(255, 77, 0, 0.2); 
+    outline: none;
+}
+.search-box button { 
+    padding: 8px 15px; background: #111; border: 1px solid #333; 
+    color: #fff; border-radius: 0 4px 4px 0; cursor: pointer; transition: 0.3s;
+}
+.search-box button:hover { background: #ff4d00; border-color: #ff4d00; }
+
+/* --- BOTÕES LOGIN E CARRINHO --- */
+.auth-buttons { display: flex; align-items: center; gap: 15px; }
+
+.cart-link {
+    position: relative;
+    text-decoration: none;
+    font-size: 1.4rem;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+}
+.cart-link:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px #ff4d00);
+}
+
+/* Bolinha de contagem no carrinho */
+.cart-count {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: #ff4d00;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #000;
+}
+
+.btn-auth { 
+    padding: 8px 18px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; 
+    font-family: 'Orbitron'; transition: 0.4s; text-transform: uppercase; 
+}
+.btn-client { background: transparent; color: #fff; border: 1px solid #333; }
+.btn-client:hover { 
+    background: #fff; color: #000; border-color: #fff; 
+    box-shadow: 0 0 15px rgba(255,255,255,0.3); 
+}
+
+.btn-store { background: #ff4d00; color: #fff; border: 1px solid #ff4d00; }
+.btn-store:hover { 
+    background: #cc3e00; border-color: #cc3e00; 
+    box-shadow: 0 0 15px rgba(255, 77, 0, 0.5); 
+    transform: scale(1.05); 
+}
+
+/* --- SIDEBAR & NAV-LINKS --- */
+.sidebar {
+    position: fixed; left: -280px; top: 0; width: 280px; height: 100%;
+    background: #000; border-right: 1px solid #1a1a1a; transition: 0.4s; z-index: 2000;
+    padding: 25px;
+}
+.sidebar.active { left: 0; }
+.active{
+    display: block!important;
+    left:0;
+}
+.nav-links a { 
+    display: block; color: #999; text-decoration: none; padding: 12px 15px; 
+    font-size: 0.9rem; transition: 0.3s; border-radius: 4px; margin-bottom: 5px;
+}
+.nav-links a:hover { 
+    color: #fff; background: rgba(255, 77, 0, 0.1); 
+    padding-left: 20px; border-left: 3px solid #ff4d00; 
+}
+
+/* --- CARROSSEL --- */
+.hero-container { width: 100vw; height: 400px; position: relative; overflow: hidden; background: #111; }
+.carousel-slide { position: absolute; width: 100%; height: 100%; opacity: 0; transition: 1s ease-in-out; }
+.carousel-slide.active { opacity: 1; z-index: 1; }
+.hero-banner { width: 100%; height: 100%; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
+.hero-content h2 { font-family: 'Orbitron'; font-size: 2.8rem; text-align: center; }
+.hero-content h2 span { color: #ff4d00; }
+
+/* SETAS DO BANNER */
+.nav-arrow { 
+    position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); 
+    color: #fff; border: none; font-size: 2rem; width: 50px; height: 80px; cursor: pointer; 
+    z-index: 10; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+}
+.nav-arrow:hover { background: #ff4d00; color: #000; }
+.arrow-left { left: 0; border-radius: 0 8px 8px 0; }
+.arrow-right { right: 0; border-radius: 8px 0 0 8px; }
+
+/* --- VITRINE COMPACTA --- */
+.looding { display:block; 
+            color: #ff4d00; 
+            text-align: center; 
+            padding: 20px; 
+            margin: 20px auto; 
+            width: 100%!important; 
+            font-family: 'Orbitron'; 
+            font-size: 1.4rem; }
+
+.vitrine-title { font-family: 'Orbitron'; font-size: 1rem; color: #ff4d00; letter-spacing: 2px; }
+.feed-wrapper { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); 
+    gap: 15px; 
+    padding: 20px; 
+    background:rgb(10, 10, 10);
+    max-height: 500px;
+    overflow-y: auto;    
+}
+.post { background: #0d0d0d; 
+        border: 1px solid #b0aeae; 
+        border-radius: 4px; 
+        overflow: hidden; 
+        transition: 0.3s;
+        min-height: 250px;
+        max-height: 300px;}
+.post:hover { 
+    border-color: #ff4d00; 
+    transform: translateY(-5px); 
+    box-shadow: 0 5px 15px rgba(255, 77, 0, 0.2); 
+}
+
+.post-media { 
+    width: 100%; 
+    aspect-ratio: 1/1; 
+    background: #fff; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 15px; 
+}
+.post-media img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.post-body { padding: 10px; }
+.price-text { color: #ff4d00; font-weight: 900; font-size: 1rem; }
+.store-name { font-size: 0.6rem; color: #555; text-transform: uppercase; margin-top: 5px; }
+
+/* AUXILIARES */
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1500; }
+.overlay.active { display: block; }
+
+ /* --- ESTILOS ADICIONADOS (PARTE DA OBRA-PRIMA) --- */
+.partners-section {
+            padding: 20px;
+            background: #000;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            border-bottom: 1px solid #111;
+        
+        }
+        .partners-section::-webkit-scrollbar { display: none; }
+        .partner-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .partner-item:hover { transform: translateY(-5px); }
+        .partner-circle {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            border: 2px solid #ff4d00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 15px rgba(255, 77, 0, 0.2);
+        }
+        .partner-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .partner-initial {
+            font-family: 'Orbitron';
+            font-size: 24px;
+            color: #ff4d00;
+            font-weight: 900;
+        }
+        .partner-name {
+            margin-top: 8px;
+            font-size: 10px;
+            font-family: 'Orbitron';
+            color: #888;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 80px;
+        }
+        /* --- FIM DOS ESTILOS ADICIONADOS --- */
+
+        /* Estilos para a Barra de Filtros posicionada abaixo do título */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 0 20px 20px;
+            background: transparent;
+            align-items: center;
+        }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-group label { font-size: 10px; font-family: 'Orbitron'; color: #555; letter-spacing: 1px; }
+        .filter-select {
+            background: #111;
+            color: #fff;
+            border: 1px solid #b0aeae;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Inter';
+            cursor: pointer;
+            outline: none;
+            transition: 0.3s;
+        }
+        .filter-select:hover { border-color: #ff4d00; }
+        .filter-select:focus { border-color: #ff4d00; }
+        .vitrine-title { margin-bottom: 10px; }
+
+        /* Banner de Chamada para Suporte - Estilo Peça Bruta */
+        .ia-highlight-box {
+            margin: 40px 20px;
+            padding: 25px;
+            background: linear-gradient(90deg, #000 0%, #001a0c 100%);
+            border: 1px solid #ff4d00;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 20px rgba(255, 77, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .ia-highlight-box::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 77, 0, 0.1), transparent);
+            animation: shine 4s infinite;
+        }
+        @keyframes shine { 100% { left: 100%; } }
+        .ia-info h4 { 
+            font-family: 'Orbitron'; 
+            color: #ff4d00; 
+            font-size: 14px; 
+            margin: 0 0 5px 0; 
+            letter-spacing: 1px;
+        }
+        .ia-info p { 
+            color: #ccc; 
+            font-size: 13px; 
+            margin: 0; 
+            max-width: 450px; 
+            line-height: 1.4;
+        }
+        .ia-btn {
+            background: #ff4d00;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-family: 'Orbitron';
+            font-size: 12px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 77, 0, 0.3);
+        }
+        .ia-btn:hover {
+            background: #fff;
+            color: #ff4d00;
+            transform: translateY(-2px);
+        }
+        .store-link {
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-block;
+            color: #888;
+            font-size: 11px;
+        }
+        .store-link:hover {
+            color: #ff4d00 !important;
+            text-decoration: underline;
+        }
+        .logo { color: white; transition: 0.3s ease; display: inline-block; cursor: pointer; font-family: 'Orbitron'; font-size: 24px; font-weight: 700; }
+        .logo span { color: #ff4d00; }
+        .logo-link { text-decoration: none; display: flex; align-items: center; }
+        .logo-link:hover .logo { 
+            transform: scale(1.05); 
+            text-shadow: 0 0 15px rgba(255, 77, 0, 0.3);
+        }
+        .btn-logout-header {
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-logout-header:hover {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        /* Estilo para o nome clicável da empresa */
+        .user-link-header {
+            color: #ff4d00;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 10px;
+            text-decoration: none;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .user-link-header:hover {
+            color: #fff;
+            text-shadow: 0 0 8px #ff4d00;
+        }
+
+        /* Mensagem de Não Encontrado */
+        .no-results {
+            grid-column: 1 / -1;
+            padding: 60px 20px;
+            text-align: center;
+            background: #0a0a0a;
+            border: 1px dashed #333;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        .no-results h2 { font-family: 'Orbitron'; color: #ff4d00; font-size: 18px; margin-bottom: 10px; }
+        .no-results p { color: #888; font-family: 'Inter'; font-size: 14px; }
+
+        @media (max-width: 768px) {
+            .ia-highlight-box { flex-direction: column; text-align: center; gap: 15px; }
+        }
+        
+        /* Limita o tamanho do título no Feed para não quebrar os cards */
+.post-body h2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Mostra no máximo 2 linhas */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 32px; /* Garante que todos fiquem da mesma altura */
+}
+
+/* ======================================================== */
+/* 🔴 TOOLTIP DO ÍCONE DE INFORMAÇÃO (LADO ESQUERDO) 🔴 */
+/* ======================================================== */
+
+.tooltip-icone {
+    position: relative;
+    cursor: pointer;
+    color: #888;
+    font-size: 16px;
+    transition: 0.3s;
+    outline: none; /* Tira a borda azul ao clicar no celular */
+}
+
+.tooltip-icone:hover,
+.tooltip-icone:active,
+.tooltip-icone:focus {
+    color: #ff4d00;
+}
+
+/* O corpo do balãozinho de explicação */
+.tooltip-icone::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 50%;
+    left: 120%; /* Fica posicionado à direita do ícone */
+    transform: translateY(-50%);
+    background-color: #111;
+    border: 1px solid #ff4d00;
+    color: #fff;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    width: 250px; /* Largura fixa para ficar como uma caixa de texto */
+    white-space: normal; /* Permite o texto quebrar de linha */
+    line-height: 1.5;
+    text-transform: none; /* Evita que o texto fique todo em maiúsculo */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(255, 77, 0, 0.2);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* O GATILHO (Computador e Celular): Quando passar o mouse ou tocar */
+.tooltip-icone:hover::after,
+.tooltip-icone:active::after,
+.tooltip-icone:focus::after {
+    opacity: 1;
+    visibility: visible;
+    left: 150%; /* Faz o balãozinho dar uma "escorregada" para a direita */
+}
+
+
+
+
+/* ======================================================= */
+/* CÓDIGO DEFINITIVO PARA CELULAR (CABEÇALHO + PRODUTOS)   */
+/* ======================================================= */
+@media (max-width: 768px) {
+    /* 1. O CABEÇALHO (NAVBAR) EM 3 ANDARES E COM ESPAÇAMENTO */
+    .navbar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 15px 20px !important;
+        height: auto !important; 
+        gap: 15px !important; /* Desgruda a pesquisa dos botões */
+    }
+
+    .menu-btn { order: 1 !important; margin: 0 !important; }
+    .logo-link { order: 2 !important; margin: 0 auto !important; }
+    .auth-buttons { display: contents !important; }
+    .cart-link { order: 3 !important; font-size: 24px !important; margin: 0 !important; }
+
+    .search-box {
+        order: 4 !important;
+        width: 100% !important;
+        display: flex !important;
+        margin: 5px 0 !important;
+    }
+    .search-box input {
+        width: 100% !important;
+        flex: 1 !important;
+        padding: 12px 15px !important;
+        font-size: 14px !important;
+        border-radius: 8px 0 0 8px !important;
+    }
+    .search-box button {
+        width: 50px !important;
+        border-radius: 0 8px 8px 0 !important;
+    }
+
+    #auth-section {
+        order: 5 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 15px !important; /* Desgruda os dois botões de login */
+        margin-top: 5px !important;
+    }
+    .btn-auth {
+        flex: 1 !important;
+        text-align: center !important;
+        padding: 12px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+    }
+
+    /* 2. FILTROS E CORPO DO SITE RESPIRANDO */
+    main { padding: 15px !important; }
+
+    .filter-bar {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        margin-bottom: 20px !important;
+    }
+    .filter-group { width: 100% !important; }
+    .filter-select { width: 100% !important; padding: 10px !important; }
+
+    /* 3. A VITRINE DE PRODUTOS (TRAVADA EM 2 COLUNAS) */
+    .feed-wrapper {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 colunas lado a lado */
+        gap: 15px !important; /* Espaço entre os cartões para não encostarem */
+        padding: 0 !important; 
+    }
+
+    .feed-wrapper > div { 
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        padding: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+
+    .feed-wrapper img {
+        height: 120px !important; /* Fim das fotos gigantes */
+        width: 100% !important;
+        object-fit: cover !important;
+        border-radius: 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .feed-wrapper h4 {
+        font-size: 12px !important;
+        line-height: 1.3 !important;
+        margin: 0 0 5px 0 !important;
+    }
+    .feed-wrapper .preco {
+        font-size: 15px !important;
+        margin-bottom: 10px !important;
+    }
+    .feed-wrapper button {
+        padding: 10px !important;
+        font-size: 11px !important;
+        width: 100% !important;
+        margin-top: 5px !important;
+    }
+
+    /* 4. BANNER "NÃO ACHOU A PEÇA" RESPIRANDO */
+    #iaPromo {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 15px !important;
+        padding: 20px !important;
+    }
+    #iaPromo > div {
+        width: 100% !important;
+        align-items: center !important;
+    }
+    .ia-btn {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}

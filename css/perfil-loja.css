@@ -1,0 +1,303 @@
+:root {
+    --primary: #ff4d00;
+    --bg: #000;
+    --glass: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+body { 
+    background: var(--bg); 
+    color: #fff; 
+    font-family: 'Inter', sans-serif; 
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.navbar {
+    padding: 20px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: 900; letter-spacing: 4px; cursor: pointer; text-decoration: none; color: #fff; }
+.logo span { color: var(--primary); text-shadow: 0 0 15px var(--primary); }
+
+.container { max-width: 1000px; margin: 60px auto; padding: 0 25px; }
+
+.profile-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 50px;
+    display: flex;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+}
+
+.avatar-glow {
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    padding: 5px;
+    background: linear-gradient(135deg, var(--primary), #ff0055);
+    box-shadow: 0 0 30px rgba(255, 77, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar-glow img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid var(--bg);
+}
+
+.avatar-initial {
+    font-family: 'Orbitron';
+    font-size: 80px;
+    color: #fff;
+    font-weight: 900;
+}
+
+.shop-info h1 {
+    font-family: 'Orbitron';
+    font-size: 2.2rem;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.stats-grid { display: flex; gap: 40px; margin: 25px 0; }
+.stat-box b { font-size: 1.5rem; display: block; color: var(--primary); font-family: 'Orbitron'; }
+.stat-box span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #666; }
+
+.btn-group { display: flex; gap: 15px; margin-top: 30px; }
+.btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-family: 'Orbitron';
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+    text-transform: uppercase;
+}
+
+.btn-follow { background: var(--primary); color: #fff; }
+.btn-active-follow { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+.btn-following { background: transparent; border: 1px solid var(--border); color: #fff; }
+
+
+/* ======================================================== */
+/* VITRINE DE PRODUTOS (ESTILO FEED APLICADO AQUI) - CORRIGIDO */
+/* ======================================================== */
+
+.product-grid, #productGrid {
+    display: grid;
+    /* Trava o tamanho entre 160px e 200px. NUNCA vão ficar gigantes! */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 200px));
+    gap: 15px;
+    margin-top: 50px;
+    justify-content: start;
+}
+
+/* O card de cada peça */
+.post {
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 8px; /* Cantos um pouco mais suaves */
+    overflow: hidden;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    max-width: 200px; /* Impede 100% que o cartão estique */
+}
+
+.post:hover {
+    border-color: var(--primary);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(255, 77, 0, 0.2);
+}
+
+/* Container branco para a foto */
+.post-media {
+    position: relative;
+    width: 100%;
+    height: 160px; /* Altura fixa para a foto não virar um outdoor */
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.badge-reservado {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff4d00;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.post-media img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Não corta a foto da peça */
+}
+
+/* Container do título e preço */
+.post-body {
+    padding: 12px;
+    display: flex !important;
+    flex-direction: column;
+    gap: 4px; /* Espaço entre título, loja e preço */
+}
+
+/* TÍTULO BLINDADO: Não quebra a linha, coloca "..." se for grande */
+.post-body h2 {
+    font-size: 13px !important;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 !important;
+}
+
+.price-text {
+    color: var(--primary);
+    font-weight: 900;
+    font-size: 16px !important;
+    margin: 0 !important;
+}
+
+.store-name {
+    font-size: 10px !important;
+    color: #555;
+    text-transform: uppercase;
+    margin: 0 !important;
+}
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (PERFIL DA LOJA)     */
+/* LARGURA TRAVADA E TAMANHOS REDUZIDOS      */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* 1. O Segredo contra o "desajuste do lado direito" */
+    * {
+        box-sizing: border-box !important;
+    }
+    
+    body, html { 
+        width: 100vw !important; 
+        max-width: 100% !important;
+        overflow-x: hidden !important; /* Trava a tela para não ir para o lado */
+    }
+
+    /* 2. Navbar super compacta */
+    .navbar {
+        width: 100% !important;
+        padding: 12px 15px !important;
+    }
+    .logo { font-size: 1rem !important; }
+
+    /* 3. Container Principal Alinhado */
+    .container {
+        width: 100% !important;
+        margin: 15px auto !important;
+        padding: 0 15px !important;
+    }
+
+    /* 4. Cartão de Perfil (Micro e Perfeito) */
+    .profile-card { 
+        width: 100% !important;
+        flex-direction: column !important; 
+        text-align: center !important; 
+        padding: 20px 15px !important; 
+        gap: 15px !important; 
+        border-radius: 12px !important;
+    }
+
+    /* Foto da Loja Muito Menor */
+    .avatar-glow {
+        width: 85px !important;
+        height: 85px !important;
+        padding: 3px !important;
+        margin: 0 auto !important;
+    }
+    .avatar-initial { font-size: 35px !important; }
+
+    /* Textos do Perfil Reduzidos */
+    .shop-info h1 { font-size: 1.1rem !important; margin-bottom: 5px !important; }
+
+    .stats-grid {
+        width: 100% !important;
+        justify-content: center !important;
+        gap: 15px !important;
+        margin: 10px 0 !important;
+    }
+    .stat-box b { font-size: 0.95rem !important; }
+    .stat-box span { font-size: 0.55rem !important; }
+
+    /* Botões de Seguir Esticados Igualmente */
+    .btn-group {
+        width: 100% !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
+    }
+    .btn {
+        flex: 1 !important; /* Faz os dois botões terem exatamente o mesmo tamanho */
+        padding: 10px !important;
+        font-size: 9px !important;
+    }
+
+    /* 5. Vitrine de Peças (Encaixe Perfeito) */
+    .product-grid, #productGrid { 
+        width: 100% !important;
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 8px !important; /* Intervalo bem estreito entre as peças */
+        margin-top: 20px !important;
+        padding: 0 !important;
+    }
+    
+    .post {
+        width: 100% !important;
+        border-radius: 6px !important;
+    }
+
+    /* Foto da Peça Delicada */
+    .post-media { 
+        height: 100px !important; 
+        padding: 5px !important; 
+    }
+
+    .badge-reservado {
+        padding: 2px 4px !important;
+        font-size: 7px !important;
+    }
+
+    /* Textos dos Produtos Micro e Limpos */
+    .post-body {
+        padding: 8px !important;
+        gap: 2px !important;
+    }
+    .post-body h2 { font-size: 9px !important; }
+    .price-text { font-size: 11px !important; }
+    .store-name { font-size: 7px !important; }
+}

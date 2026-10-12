@@ -1,0 +1,126 @@
+ :root {
+            --bg-dark: #050505;
+            --bg-card: #0a0a0a;
+            --border-color: #1a1a1a;
+            --primary: #ff4d00;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --status-pendente: #ffc107;
+            --status-aprovada: #28a745;
+            --status-recusada: #dc3545;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hidden { display: none !important; }
+        .nohidden{ display: block !important;}
+
+        /* TELA DE LOGIN */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            position: relative;
+            text-align: center;
+        }
+
+        .login-box::before {
+            content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: var(--primary);
+        }
+
+        .login-box h1 { font-family: 'Orbitron'; font-size: 24px; color: var(--primary); margin: 0 0 10px 0; letter-spacing: 2px; }
+        .login-box p { color: var(--text-muted); font-size: 12px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 10px; font-weight: 900; color: #444; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; }
+        .input-group input { width: 100%; padding: 15px; background: #000; border: 1px solid #222; color: white; box-sizing: border-box; transition: 0.3s; font-family: 'Inter'; }
+        .input-group input:focus { outline: none; border-color: var(--primary); }
+
+        .btn-main { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; letter-spacing: 3px; transition: 0.3s; margin-top: 10px; }
+        .btn-main:hover { background: #fff; color: #000; }
+        .btn-main:disabled { background: #333; color: #888; cursor: not-allowed; }
+
+        /* DASHBOARD ADMINISTRATIVO */
+        .dashboard-wrapper { padding: 30px; 
+                            max-width: 1400px; 
+                            margin: 0 auto; 
+                            width: 100%; 
+                            box-sizing: border-box; }
+
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .top-navbar .brand h1 { font-family: 'Orbitron'; color: var(--primary); margin: 0; font-size: 22px; letter-spacing: 2px;}
+        .top-navbar .brand p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 12px; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 20px; }
+        .admin-info { text-align: right; }
+        .admin-info .name { font-family: 'Orbitron'; font-weight: bold; font-size: 14px; color: #fff; display: block; }
+        .admin-info .role { font-size: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .btn-logout { background: transparent; border: 1px solid #444; color: #888; padding: 10px 15px; font-family: 'Orbitron'; font-size: 10px; cursor: pointer; transition: 0.3s; }
+        .btn-logout:hover { border-color: var(--status-recusada); color: var(--status-recusada); }
+
+        .layout-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 30px; }
+        @media(max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; } }
+
+        /* Estatísticas */
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 4px; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; }
+        .stat-card.blue::after { background: #00d2ff; }
+        .stat-card.orange::after { background: var(--primary); }
+        .stat-card.green::after { background: var(--status-aprovada); }
+        .stat-card.yellow::after { background: var(--status-pendente); }
+        .stat-card.red::after { background: var(--status-recusada); }
+
+        .stat-card h3 { margin: 0 0 15px 0; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card .val { font-family: 'Orbitron'; font-size: 36px; font-weight: 700; margin: 0; color: white; }
+
+        /* Ações Rápidas */
+        .quick-actions { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 4px; }
+        .section-title { font-family: 'Orbitron'; font-size: 14px; color: var(--primary); margin: 0 0 20px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        
+        .action-card { background: #000; border: 1px solid #222; padding: 20px; color: inherit; text-decoration: none; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .action-card:hover { border-color: var(--primary); transform: translateX(5px); }
+        .action-card h4 { margin: 0; font-family: 'Orbitron'; font-size: 14px; color: #fff; }
+        .action-card p { margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted); }
+        .action-card .icon { font-size: 20px; color: var(--primary); }
+
+        /* Atividades Recentes */
+        .activity-feed { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 4px; }
+        .activity-list { list-style: none; padding: 0; margin: 0; }
+        .activity-item { padding: 15px 0; border-bottom: 1px solid #1a1a1a; display: flex; flex-direction: column; gap: 5px; }
+        .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .activity-item .time { font-size: 10px; color: var(--primary); font-family: 'Orbitron'; }
+        .activity-item .desc { font-size: 12px; color: #ccc; line-height: 1.5; }
+        .activity-item .desc strong { color: white; }
+
+        /* Skeletons e Loaders */
+        .skeleton { background: #111; height: 36px; width: 60px; border-radius: 4px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Toasts */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--bg-card); border-left: 4px solid var(--primary); color: #fff; padding: 15px 20px; font-family: 'Inter'; font-size: 13px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.8); opacity: 0; transform: translateX(100%); transition: all 0.3s ease-in-out; max-width: 350px; }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.error { border-left-color: var(--status-recusada); }

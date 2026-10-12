@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações de Perfil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: #fff; font-family: 'Inter'; padding: 50px 20px; }
+        .edit-card { max-width: 500px; margin: 0 auto; background: #0a0a0a; padding: 30px; border: 1px solid #1a1a1a; border-radius: 8px; }
+        h2 { font-family: 'Orbitron'; color: #ff4d00; font-size: 1.2rem; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 12px; color: #888; }
+        input, textarea { width: 100%; background: #111; border: 1px solid #222; padding: 12px; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn-save { width: 100%; background: #ff4d00; color: #fff; border: none; padding: 15px; font-family: 'Orbitron'; cursor: pointer; margin-top: 10px; }
+        .btn-cancel { width: 100%; background: transparent; color: #555; border: none; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="edit-card">
+        <h2>EDITAR PERFIL</h2>
+        <div class="form-group">
+            <label>FOTO DE PERFIL (URL ou ARQUIVO)</label>
+            <input type="file" id="newPhoto" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label>NOME DA LOJA</label>
+            <input type="text" id="editNome" disabled>
+        </div>
+        <div class="form-group">
+            <label>BIO / DESCRIÇÃO</label>
+            <textarea id="editBio" rows="4"></textarea>
+        </div>
+        <button class="btn-save" onclick="salvar()">SALVAR ALTERAÇÕES</button>
+        <button class="btn-cancel" onclick="history.back()">CANCELAR</button>
+    </div>
+
+    <script>
+        // Pega os dados do usuário logado
+        const usuarioData = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+        const nomeLoja = typeof usuarioData === 'object' ? usuarioData.nome : usuarioData;
+
+        // PROTEÇÃO: Se não houver nome de loja, volta pro feed
+        if(!nomeLoja) {
+            alert("Acesso negado!");
+            window.location.href = 'feed.html';
+        }
+
+        // Preenche os campos com o que já está salvo
+        document.getElementById('editNome').value = nomeLoja;
+        document.getElementById('editBio').value = sessionStorage.getItem(`bio_${nomeLoja}`) || "";
+
+        function salvar() {
+            const bio = document.getElementById('editBio').value;
+            const file = document.getElementById('newPhoto').files[0];
+
+            // Salva a Bio no banco de dados vinculada ao nome da loja
+            sessionStorage.setItem(`bio_${nomeLoja}`, bio);
+
+            // Se enviou foto, transforma em texto (base64) e salva
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    sessionStorage.setItem(`foto_${nomeLoja}`, e.target.result);
+                    finalizar();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                finalizar();
+            }
+        }
+
+        function finalizar() {
+            alert("Perfil Atualizado com Sucesso!");
+            // Define qual perfil deve ser visualizado
+            sessionStorage.setItem('loja_ativa_perfil', nomeLoja);
+            window.location.href = 'perfil-loja.html';
+        }
+    </script>
+</body>
+</html>

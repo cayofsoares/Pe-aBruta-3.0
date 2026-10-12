@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Carrinho | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/carrinho.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="cart-header">
+        <a href="feed.html" class="back-link">❮</a>
+        
+        <a href="feed.html" class="logo-link">
+            <div class="logo">PEÇA<span>BRUTA</span></div>
+        </a>
+    </header>
+    <main class="cart-container">
+        <h1>SEU CARRINHO</h1>
+        <div id="cart-items" class="cart-list"></div>
+        <div class="cart-summary">
+            <div class="summary-row">
+                <span>Total:</span>
+                <span id="cart-total">R$ 0,00</span>
+            </div>
+            <button class="btn-checkout" onclick="finalizarCompra()">FINALIZAR PEDIDO</button>
+        </div>
+    </main>
+  <script src="JS/carrinho.js"></script>
+</body>
+</html>

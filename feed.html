@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEÇA BRUTA | Central de Peças</title>
+    <link rel="stylesheet" href="css/feed.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <button class="menu-btn" onclick="toggleSidebar()" style="background:none; border:none; cursor:pointer;">
+            <span style="display:block; width:25px; height:2px; background:#fff; margin:5px 0;"></span>
+            <span style="display:block; width:25px; height:2px; background:#fff; margin:5px 0;"></span>
+            <span style="display:block; width:25px; height:2px; background:#fff; margin:5px 0;"></span>
+        </button>
+        <a href="feed.html" class="logo-link">
+            <div class="logo">PEÇA<span>BRUTA</span></div>
+        </a>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Buscar por peça, marca ou loja..." 
+                   onkeydown="if(event.key === 'Enter') atualizarFiltros()">
+            <button onclick="atualizarFiltros()">🔍</button>
+        </div>
+        
+        <div class="auth-buttons" id="authContainer">
+            <a href="carrinho.html" class="cart-link" title="Meu Carrinho">
+                🛒 <span id="cartCounter" class="cart-count" style="display: none;">0</span>
+            </a>
+            <div id="auth-section" style="display: flex; gap: 10px; align-items: center;">
+                <a href="login.html" id="btnEntrar" class="btn-auth btn-client">Entrar</a>
+                <a href="login-empresa.html" id="btnLoja" class="btn-auth btn-store">Sou Loja</a>
+            </div>
+        </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header" style="margin-bottom: 20px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+            <p id="nomeUsuarioSidebar" style="font-family:'Orbitron'; font-size:11px; color:#ff4d00;">PAINEL VISITANTE</p>
+        </div>
+        <nav class="nav-links">
+            <a href="feed.html" style="color:#fff; background: rgba(255, 77, 0, 0.2);">🏠 Início / Feed</a>
+            <a href="carrinho.html">🛒 Meu Carrinho</a>
+            <a href="pedidos.html">📦 Meus Pedidos</a>
+            <a href="mensagens.html">💬 Mensagens</a>
+            <div id="areaExclusivaPJ" style="display: none;">
+                <hr style="border:0; border-top:1px solid #1a1a1a; margin: 15px 0;">
+                <a href="painel-lojista.html" style="color: #ff4d00;">📤 Postar Nova Peça</a>
+            </div>
+            <a href="#" onclick="logout()" id="linkSairSidebar" style="display:none; color: #ff4444; font-size: 10px; margin-top: 10px; font-family: 'Orbitron';">SAIR DA CONTA</a>
+        </nav>
+    </aside>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div> 
+
+    <main>       
+
+
+        <!-- ======================================================== -->
+        <!-- 🔴 DESTAQUE COM TOOLTIP NO LADO ESQUERDO 🔴 -->
+        <!-- ======================================================== -->
+        <!-- BANNER DE SOLICITAÇÃO DE PEÇAS NO FEED -->
+    <section id="iaPromo" class="ia-highlight-box" style="margin-top: 15px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between;">
+    
+    <!-- Lado Esquerdo: Texto e Ícone de Informação -->
+    <div class="ia-info">
+        <h4 style="display: flex; align-items: center; gap: 10px; margin: 0;">
+            NÃO ACHOU A PEÇA QUE PRECISA?
+            <span class="tooltip-icone" tabindex="0" data-tooltip="Crie uma solicitação agora mesmo! Nossas lojas parceiras vão procurar no estoque e enviar a melhor oferta para você.">
+                ⓘ
+            </span>
+        </h4>
+    </div>
+    
+    <!-- Lado Direito: Os Botões Empilhados -->
+  <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+        <a href="pedidos-loja.html" id="btnLojistaPedidos" class="ia-btn" style="display: none; background: #111; border: 1px solid #ff4d00; color: #ff4d00; width: 100%; text-align: center;">
+            VER REQUISIÇÕES 📋
+        </a>
+        <a href="solicitacoes.html" class="ia-btn" style="width: 100%; text-align: center;">
+            CRIAR SOLICITAÇÃO 🛠️
+        </a>
+    </div>
+
+</section>
+        
+
+        <h3 id="tituloVitrine" class="vitrine-title" style="padding: 10px 20px 10px;">VITRINE EXCLUSIVA</h3>
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>CATEGORIA</label>
+                <select id="filterCategory" class="filter-select">
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>ORDEM</label>
+                <select id="filterOrder" class="filter-select">
+                    <option value="padrao">Padrão (Mais recentes)</option>
+                    <option value="menor_preco">Menor Preço</option>
+                    <option value="maior_preco">Maior Preço</option>
+                </select>
+            </div>
+        </div>
+
+        <!--AREA AONDE VAI SER CARREGADA DW FORMA DINAMICA OS FEEDS-->
+        <div id="feed-list" class="feed-wrapper">
+        </div>
+        
+        <h3 id="tituloVitrine" class="vitrine-title" style="padding: 30px 20px 10px;">VITRINE DE PARCEIROS</h3>
+        <section class="partners-section" id="listaParceirosDestaque"></section>
+        
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- 🔴 NOVO RODAPÉ (FOOTER) PROFISSIONAL ADICIONADO 🔴 -->
+    <!-- ======================================================== -->
+    <footer style="background: #050505; border-top: 1px solid #1a1a1a; padding: 40px 20px; text-align: center; margin-top: 50px;">
+        <div class="logo" style="font-family: 'Orbitron'; font-size: 24px; font-weight: 900; color: white; margin-bottom: 15px;">
+            PEÇA<span style="color: #ff4d00;">BRUTA</span>
+        </div>
+        <p style="color: #888; font-family: 'Inter'; font-size: 13px; max-width: 600px; margin: 0 auto 20px; line-height: 1.5;">
+            A primeira central blindada focada na conexão direta entre os melhores fornecedores e clientes exigentes. 
+            Transparência, velocidade e performance.
+        </p>
+        <div style="color: #444; font-size: 11px; font-family: 'Inter';">
+            &copy; 2026 PEÇA BRUTA. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <script src="JS/feed.js"></script>  
+</body>
+</html>

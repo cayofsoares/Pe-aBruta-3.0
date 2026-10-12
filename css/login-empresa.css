@@ -1,0 +1,209 @@
+   :root { --orange: #ff4d00; --bg: #050505; --card: #0a0a0a; }
+        
+        body {
+            background: var(--bg);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* LOGO ESTILIZADA */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+            text-decoration: none;
+            display: block;
+        }
+        .logo-text {
+            font-family: 'Orbitron';
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .logo-peca { color: #ffffff; }
+        .logo-bruta { color: var(--orange); }
+
+        .auth-card {
+            background: var(--card);
+            border: 1px solid #1a1a1a;
+            padding: 40px;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,1);
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            height: 70%;
+            width: 4px;
+            background: var(--orange);
+        }
+
+        h1 {
+            font-family: 'Orbitron';
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        .input-group { margin-bottom: 20px; position: relative; }
+
+        label {
+            display: block;
+            font-size: 10px;
+            font-weight: 900;
+            color: #444;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            background: #000;
+            border: 1px solid #222;
+            color: white;
+            box-sizing: border-box;
+            transition: 0.3s;
+            font-family: 'Inter';
+        }
+
+        input:focus { border-color: var(--orange); outline: none; background: #050505; }
+
+        .pass-input { padding-right: 50px; }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 34px;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.4;
+            transition: 0.3s;
+            color: white;
+        }
+        .toggle-password:hover { opacity: 1; color: var(--orange); }
+        .toggle-password svg { width: 20px; height: 20px; fill: currentColor; }
+
+        .forgot-pass {
+            display: block;
+            text-align: right;
+            font-size: 11px;
+            color: #555;
+            text-decoration: none;
+            margin-top: -10px;
+            margin-bottom: 25px;
+            transition: 0.3s;
+        }
+        .forgot-pass:hover { color: var(--orange); }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: var(--orange);
+            color: white;
+            border: none;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .btn-login:hover { background: #fff; color: #000; }
+
+        .btn-back-register {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            border: 1px solid #222;
+            color: #666;
+            text-align: center;
+            text-decoration: none;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+        .btn-back-register:hover { border-color: var(--orange); color: var(--orange); }
+
+        .msg-erro {
+            background: rgba(255, 51, 51, 0.1);
+            color: #ff3333;
+            padding: 10px;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-left: 3px solid #ff3333;
+            display: none;
+        }
+
+        /* ========================================= */
+/* AJUSTES PARA CELULAR (LOGIN EMPRESA)      */
+/* ========================================= */
+@media (max-width: 480px) {
+    /* Impede que a tela balance para os lados */
+    body {
+        padding: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Reduz o cartão para caber exatamente na tela */
+    .auth-card {
+        padding: 30px 20px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Reduz o tamanho do texto da Logo */
+    .logo-text {
+        font-size: 1.5rem !important;
+    }
+
+    /* Reduz o tamanho do título "Área do Lojista" */
+    h1 {
+        font-size: 0.9rem !important;
+        margin-bottom: 25px !important;
+    }
+
+    /* Diminui a altura dos campos para facilitar o clique */
+    input {
+        padding: 12px !important;
+        font-size: 14px !important;
+    }
+
+    /* Ajusta a posição do olhinho da senha para não ficar flutuando errado */
+    .toggle-password {
+        top: 28px !important;
+        right: 12px !important;
+    }
+
+    /* Diminui um pouco o tamanho dos botões grandes */
+    .btn-login {
+        padding: 15px !important;
+        font-size: 12px !important;
+    }
+
+    .btn-back-register {
+        padding: 12px !important;
+    }
+}

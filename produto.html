@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitrine | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/feed.css">
+    <link rel="stylesheet" href="css/produto.css">  
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar" style="width: 100%; height: 70px; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; z-index: 1000;">
+        <a href="feed.html" style="text-decoration:none; font-weight: 900; font-size: 24px; color: #ff4d00;">❮</a>
+        <a href="feed.html" class="logo-link" style="text-decoration: none; margin: 0 auto;">
+            <div class="logo">PEÇA<span>BRUTA</span></div>
+        </a>
+    </header>
+
+    <main class="vitrine-container">
+
+
+        <!-- ========================================== -->
+        <!-- LADO ESQUERDO: FOTOS E AVALIAÇÕES -->
+        <!-- ========================================== -->
+        <div>
+            <!-- Imagem Principal com Setas Sobrepostas -->
+            <div class="main-img-container">
+                <button class="img-nav-btn left" onclick="navegarImagemPrincipal(-1)"><i class="fas fa-chevron-left"></i></button>
+                <img id="display-img" class="main-img" src="" alt="Produto">
+                <button class="img-nav-btn right" onclick="navegarImagemPrincipal(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Galeria de miniaturas com setas -->
+            <div class="galeria-wrapper">
+                <button class="btn-seta seta-esq" onclick="rolarGaleria(-150)"><i class="fas fa-chevron-left"></i></button>
+                <div id="thumb-area" class="thumb-bar"></div>
+                <button class="btn-seta seta-dir" onclick="rolarGaleria(150)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <!-- SEÇÃO DE AVALIAÇÕES APRIMORADA (AGORA FICA AQUI!) -->
+            <div class="reviews-section">
+                <div class="reviews-header">
+                    <h3>AVALIAÇÕES DO PRODUTO</h3>
+                    <div class="reviews-summary" id="reviewsSummaryBox">
+                        <div class="stars" id="averageStars">
+                            <!-- Gerado via JS -->
+                        </div>
+                        <span class="rating-number" id="averageRatingText">--</span>
+                        <span class="review-count" id="totalReviewsText">(-- avaliações)</span>
+                    </div>
+                </div>
+
+                <!-- Formulário de Adicionar Avaliação -->
+                <div class="add-review-box" id="addReviewBox">
+                    <h4>DEIXE SUA AVALIAÇÃO</h4>
+                    <div class="star-select" id="starSelectArea">
+                        <i class="far fa-star" data-rating="1" onclick="setRating(1)"></i>
+                        <i class="far fa-star" data-rating="2" onclick="setRating(2)"></i>
+                        <i class="far fa-star" data-rating="3" onclick="setRating(3)"></i>
+                        <i class="far fa-star" data-rating="4" onclick="setRating(4)"></i>
+                        <i class="far fa-star" data-rating="5" onclick="setRating(5)"></i>
+                    </div>
+                    <textarea id="reviewTextInput" class="review-textarea" placeholder="Conte sua experiência com este produto..."></textarea>
+                    <button class="btn-submit-review" id="btnSubmitReview" onclick="enviarAvaliacao()">ENVIAR AVALIAÇÃO</button>
+                </div>
+
+                <!-- Lista dinâmica de avaliações -->
+                <div id="reviewsList">
+                    <div style="text-align: center; padding: 20px; color: #555;">Carregando avaliações...</div>
+                </div>
+                
+                <button id="btnVerTodas" style="display:none; background:transparent; border:none; color:#ff4d00; font-family:'Inter'; font-size:12px; cursor:pointer; font-weight:bold; width:100%; text-align:center; margin-top:10px;">VER TODAS AS AVALIAÇÕES</button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- LADO DIREITO: INFORMAÇÕES, PREÇO E BOTÕES  -->
+        <!-- ========================================== -->
+        <div>
+            <!-- Box de Informações da Loja Aprimorado -->
+            <div class="store-info-box" id="storeInfoBox">
+                <div class="store-avatar-placeholder" id="storeInitial">L</div>
+                <div class="store-details">
+                    <h4 id="storeNameInfo">NOME DA LOJA <i id="storeVerifiedBadge" class="fas fa-check-circle verified-badge" title="Conta Verificada Oficialmente"></i></h4>
+                    <div class="store-stats">
+                        <span id="storeSalesCount"><i class="fas fa-shopping-bag"></i> -- Vendas</span>
+                        <span id="storeProductCount"><i class="fas fa-box"></i> -- Produtos</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #444;"></i>
+            </div>
+
+            <!-- Informações Críticas do Produto -->
+            <span id="display-cat" style="color:#ff4d00; font-weight:900; font-size:11px; letter-spacing: 2px;"></span>
+            <h1 id="display-tit" style="font-family:Orbitron; margin:10px 0; font-size: 2rem;"></h1>
+            <p id="display-loja" class="store-link" style="display: none;"></p> <!-- Mantido oculto por compatibilidade estrutural -->
+            <div id="display-prc" style="font-size:32px; font-weight: 900; color:#ff4d00; margin-bottom: 15px;"></div>
+            
+            <!-- Container: OPÇÕES/VARIAÇÕES (Oculto por padrão) -->
+            <div id="opcoes-container" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 8px;">
+                <h4 style="font-size: 11px; color: #888; margin-bottom: 10px; font-family: 'Orbitron';">SELECIONE UMA OPÇÃO:</h4>
+                <div id="display-opcoes" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <!-- Os botões de opções serão injetados aqui via JavaScript -->
+                </div>
+            </div>
+            
+            <div style="margin-top:80px; border-top: 1px solid #222; padding-top: 40px;">
+                <h4 style="font-size: 10px; color: #555; margin-bottom: 8px;">ESPECIFICAÇÕES TÉCNICAS</h4>
+                <p id="display-dsc" class="descricao-curta" style="color:#aaa; line-height:1.6; font-size: 0.9rem; margin-bottom: 5px;"></p>
+                <button id="btnLerMaisDesc" class="btn-ler-mais-desc" onclick="alternarDescricao()" style="display: none;">Ler mais</button>
+            </div>
+            
+            <div class="btn-group-cart">
+                <button id="btnCartAction" class="btn-add-cart" onclick="adicionarAoCarrinho()">🛒 Adicionar ao Carrinho</button>
+                <button id="btnRemoveCart" class="btn-remove-cart" onclick="removerDoCarrinho()">Remover do Carrinho</button>
+                <button class="btn-checkout-brutal" onclick="irParaCheckout()">COMPRAR AGORA</button>
+                <button id="btnCopiarLink" class="btn-secundario" type="button"><i class="fas fa-link" aria-hidden="true"></i> Copiar Link do Anúncio</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- BOTÃO FLUTUANTE DE CHAT -->
+    <button class="btn-floating-chat" onclick="abrirChatVendedor()">
+        <i class="fas fa-comment-dots" style="font-size: 18px;"></i> CONVERSAR COM VENDEDOR
+    </button>
+
+    <!-- MODAL DE CHAT -->
+    <div class="chat-modal-overlay" id="chatModalOverlay">
+        <div class="chat-modal-content">
+            <div class="chat-modal-header">
+                <h3><i class="fas fa-circle"></i> <span id="chatVendorName">Vendedor</span></h3>
+                <button class="btn-close-chat" onclick="fecharChatVendedor()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="chat-messages" id="chatMessagesBox">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <span style="background: #111; color: #555; padding: 4px 10px; border-radius: 10px; font-size: 10px;">Início da conversa segura</span>
+                </div>
+                <div class="chat-msg received">
+                    Olá! Sou da <strong id="chatWelcomeVendor">Loja</strong>. Em que posso te ajudar sobre a peça <strong id="chatItemName">Produto</strong>?
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatMsgInput" placeholder="Digite sua mensagem..." onkeydown="if(event.key === 'Enter') enviarMensagemChat()">
+                <button class="btn-send-msg" onclick="enviarMensagemChat()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="JS/produto.js"></script>
+</body>
+</html>

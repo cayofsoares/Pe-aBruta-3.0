@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Seguro | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/checkout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <!-- SDK OBRIGATÓRIO DO MERCADO PAGO -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+   
+   
+     <div class="checkout-wrapper">
+        <div class="resumo-pedido">
+            <h2>Resumo do Pedido</h2>
+            <h3 id="nomeProdutoTela">Carregando Produto...</h3>
+            <div class="preco-destaque" id="precoProdutoTela">R$ 0,00</div>
+        </div>
+
+       <section class="endereco-entrega" aria-labelledby="tituloEnderecoEntrega">
+           <h2 id="tituloEnderecoEntrega">Endereço de entrega</h2>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div style="display:flex; gap:14px; align-items:flex-end;">
+                    <div style="flex:7; min-width:0; display:flex; flex-direction:column; gap:7px;">
+                        <label for="enderecoRua" style="color:#ddd; font-size:12px; font-weight:600;">Rua</label>
+                        <input id="enderecoRua" name="rua" type="text" autocomplete="address-line1" required style="box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #3a3a3a; border-radius:8px; background:#1a1a1a; color:#fff; font:inherit;">
+                    </div>
+                    <div style="flex:3; min-width:0; display:flex; flex-direction:column; gap:7px;">
+                        <label for="enderecoNumero" style="color:#ddd; font-size:12px; font-weight:600;">Número</label>
+                        <input id="enderecoNumero" name="numero" type="text" autocomplete="address-line2" required style="box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #3a3a3a; border-radius:8px; background:#1a1a1a; color:#fff; font:inherit;">
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:7px;">
+                    <label for="enderecoBairro" style="color:#ddd; font-size:12px; font-weight:600;">Bairro</label>
+                    <input id="enderecoBairro" name="bairro" type="text" required style="box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #3a3a3a; border-radius:8px; background:#1a1a1a; color:#fff; font:inherit;">
+                </div>
+                <div style="display:flex; gap:14px; align-items:flex-end;">
+                    <div style="flex:2; min-width:0; display:flex; flex-direction:column; gap:7px;">
+                        <label for="enderecoCep" style="color:#ddd; font-size:12px; font-weight:600;">CEP</label>
+                        <input id="enderecoCep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" required style="box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #3a3a3a; border-radius:8px; background:#1a1a1a; color:#fff; font:inherit;">
+                    </div>
+                    <div style="flex:3; min-width:0; display:flex; flex-direction:column; gap:7px;">
+                        <label for="enderecoCidade" style="color:#ddd; font-size:12px; font-weight:600;">Cidade</label>
+                        <input id="enderecoCidade" name="cidade" type="text" autocomplete="address-level2" required style="box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #3a3a3a; border-radius:8px; background:#1a1a1a; color:#fff; font:inherit;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REMOVA TODA A SUA CAIXA "Meios de Pagamento" e o botão "Pagar" azul falso -->
+        <!-- Mantenha APENAS esta div vazia: -->
+        <div id="paymentBrick_container"></div>
+    </div>
+
+    <script src="JS/checkout.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Solicitações | PEÇA BRUTA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/solicitacoes.css">
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+
+    <nav class="navbar">
+        <a href="feed.html" class="logo">PEÇA<span>BRUTA</span></a>
+        <button class="btn-voltar" onclick="location.href='feed.html'">VOLTAR</button>
+    </nav>
+
+    <!-- CABEÇALHO -->
+    <header class="header-impacto">
+        <h1>PEÇAS ESPECIAIS & <span>PROJETOS SOB MEDIDA</span></h1>
+        <p>Encontre componentes específicos ou solicite a fabricação de suportes e itens exclusivos. Nossa rede de parceiros atende a qualquer necessidade do seu maquinário ou equipamento.</p>
+    </header>
+
+    <main class="container-master" id="mainContainer">
+        
+        <form id="formSolicitacao" class="form-futurista">
+            
+            <!-- MÓDULO 1: IDENTIFICAÇÃO -->
+            <div class="modulo-form">
+                <div class="modulo-header">
+                    <span class="modulo-icone">⚙️</span>
+                    <h3>1. IDENTIFICAÇÃO DO COMPONENTE OU PROJETO</h3>
+                </div>
+                <div class="modulo-body row-flex">
+                    <div class="input-box box-large">
+                        <label>O QUE VOCÊ PRECISA?</label>
+                        <input type="text" id="tituloSolicitacao" class="form-control" placeholder="Ex: Motor de partida, Suporte fabricado para geladeira..." required>
+                    </div>
+                    <div class="input-box box-small">
+                        <label>CATEGORIA</label>
+                        <select id="categoriaVeiculo" class="form-control" required onchange="atualizarDicaCategoria()">
+                            <option value="">Aguardando sistema...</option>
+                        </select>
+                        <small id="dicaCategoria" class="dica-neon"></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 2: LOGÍSTICA COMPLETA -->
+            <div class="modulo-form">
+                <div class="modulo-header">
+                    <span class="modulo-icone">📍</span>
+                    <h3>2. DADOS DE ENTREGA E LOGÍSTICA</h3>
+                </div>
+                <div class="modulo-body">
+                    <div class="row-flex" style="margin-bottom: 20px;">
+                        <div class="input-box box-small">
+                            <label>CEP</label>
+                            <input type="text" id="cepCliente" class="form-control" placeholder="00000-000" maxlength="9" required onkeyup="mascaraCEP(this)" onblur="buscarCEP(this.value)">
+                        </div>
+                        <div class="input-box box-large">
+                            <label>ENDEREÇO (RUA E BAIRRO)</label>
+                            <!-- TRAVA REMOVIDA AQUI: Agora você pode digitar livremente -->
+                            <input type="text" id="ruaCliente" class="form-control" placeholder="Ex: Av. Principal, Centro..." required>
+                        </div>
+                    </div>
+                    <div class="row-flex">
+                        <div class="input-box box-small">
+                            <label>CIDADE E ESTADO</label>
+                            <input type="text" id="cidadeCliente" class="input-bloqueado" placeholder="Aguardando CEP..." required readonly>
+                        </div>
+                        <div class="input-box box-large">
+                            <label>NÚMERO E PONTO DE REFERÊNCIA</label>
+                            <input type="text" id="referenciaCliente" class="form-control" placeholder="Ex: Nº 123, Próximo ao mercado principal..." required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 3: ESPECIFICAÇÕES TÉCNICAS -->
+            <div class="modulo-form">
+                <div class="modulo-header">
+                    <span class="modulo-icone">📝</span>
+                    <h3>3. ESPECIFICAÇÕES TÉCNICAS E MEDIDAS</h3>
+                </div>
+                <div class="modulo-body">
+                    <div class="input-box">
+                        <label>FORNEÇA O MÁXIMO DE DETALHES (ANO, MODELO, CÓDIGO DA PEÇA OU DIMENSÕES DO PROJETO)</label>
+                        <textarea id="descricaoSolicitacao" class="form-control" placeholder="Uma descrição detalhada garante que os fornecedores enviem o orçamento da peça exata ou fabriquem o projeto perfeitamente." required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO 4: MÍDIA VISUAL -->
+            <div class="modulo-form">
+                <div class="modulo-header">
+                    <span class="modulo-icone">📸</span>
+                    <h3>4. ARQUIVOS DE IDENTIFICAÇÃO</h3>
+                </div>
+                <div class="modulo-body">
+                    <div class="upload-zone">
+                        <input type="file" id="midiaSolicitacao" accept="image/*,video/*,audio/*" multiple onchange="mostrarNomesArquivos(this)">
+                        <div class="upload-visual">
+                            <div class="icone-nuvem">📁</div>
+                            <h4>Anexar Fotos, Vídeos, Áudios ou Projetos</h4>
+                            <p>Arraste os arquivos para cá ou clique para selecionar</p>
+                        </div>
+                    </div>
+                    <div id="file-names" class="arquivo-status">Nenhum arquivo anexado ainda.</div>
+                </div>
+            </div>
+
+            <!-- AÇÃO FINAL -->
+            <div class="acao-final">
+                <button type="submit" class="btn-neon">
+                    PROCESSAR E ENVIAR PARA FORNECEDORES
+                </button>
+            </div>
+            
+        </form>
+    </main>
+
+
+<!-- ALERTA DE ERRO -->
+    <div id="alertaErro" class="alerta-customizado">
+        <span class="alerta-icone">⚠️</span>
+        <div class="alerta-texto">
+            <h4>ACESSO RESTRITO</h4>
+            <p>Faça login para utilizar a central.</p>
+        </div>
+    </div>
+
+    <!-- 🔴 NOVO: ALERTA DE SUCESSO CUSTOMIZADO -->
+    <div id="alertaSucesso" class="alerta-customizado sucesso">
+        <span class="alerta-icone">✅</span>
+        <div class="alerta-texto">
+            <h4>REQUISIÇÃO ENVIADA!</h4>
+            <p>Sua solicitação já está disponível no painel das lojas. Aguarde o retorno dos fornecedores.</p>
+        </div>
+    </div>
+
+    <script src="JS/solicitacoes.js"></script>
+</body>
+</html>

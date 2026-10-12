@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-box">
+        <header class="login-header">
+            <a href="feed.html" class="back-link">← Voltar</a>
+            <div class="logo">PEÇA<span>BRUTA</span></div>
+            <h1>ACESSO À PLATAFORMA</h1>
+            <p>Insira suas credenciais para continuar</p>
+        </header>
+
+        <form id="loginForm">
+            <div class="field-group">
+                <label>E-mail Corporativo ou Pessoal</label>
+                <div class="input-wrapper">
+                    <span class="icon">📧</span>
+                    <input type="email" id="emailLogin" placeholder="exemplo@pecabruta.com.br" required>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <div class="label-row">
+                    <label>Senha</label>
+                    <a href="#" class="forgot-pass">Esqueceu a senha?</a>
+                </div>
+                <div class="input-wrapper">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="senhaLogin" placeholder="Sua senha secreta" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-enter">ACESSAR CONTA</button>
+        </form>
+
+        <div class="divider">
+            <span>OU</span>
+        </div>
+
+        <div class="register-footer">
+            <p>Ainda não faz parte da rede?</p>
+            <a href="registro.html" class="btn-create">CRIAR CONTA AGORA</a>
+        </div>
+    </div>
+
+
+    
+
+    <script src="JS/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+body {
+    margin: 0; padding: 0; background: #050505; color: #fff;
+    font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center;
+    height: 100vh; overflow: hidden;
+}
+
+.app-container { display: flex; width: 100%; max-width: 1400px; height: 100vh; background: #0a0a0a; }
+
+/* LATERAL */
+.sidebar-panel { width: 380px; background: #0f0f0f; border-right: 1px solid #1f1f1f; display: flex; flex-direction: column; z-index: 10; }
+.sidebar-header { padding: 20px 25px; border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; gap: 15px; }
+.btn-voltar { background: #1a1a1a; border: 1px solid #333; color: #ff4d00; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.btn-voltar:hover { background: #ff4d00; color: #fff; border-color: #ff4d00; }
+.logo { font-family: 'Orbitron'; font-weight: 900; font-size: 18px; margin: 0; letter-spacing: 1px;}
+.logo span { color: #ff4d00; }
+
+.search-box { padding: 20px 25px; position: relative; }
+.search-box i { position: absolute; left: 40px; top: 50%; transform: translateY(-50%); color: #666; font-size: 14px; }
+.search-box input { width: 100%; padding: 14px 15px 14px 40px; border-radius: 10px; background: #141414; border: 1px solid #2a2a2a; color: #fff; font-family: 'Inter'; font-size: 13px; outline: none; box-sizing: border-box; transition: 0.3s; }
+.search-box input:focus { border-color: #ff4d00; }
+
+.stores-list { flex: 1; overflow-y: auto; padding: 0 15px 20px 15px; display: flex; flex-direction: column; gap: 5px; }
+.stores-list::-webkit-scrollbar { width: 5px; }
+.stores-list::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; }
+
+.store-item { display: flex; gap: 15px; padding: 12px 15px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; transition: 0.2s; align-items: center; }
+.store-item:hover { background: #141414; border-color: #2a2a2a; }
+.store-item.ativo { background: rgba(255, 77, 0, 0.08); border-color: #ff4d00; }
+.store-avatar { width: 45px; height: 45px; border-radius: 12px; background: linear-gradient(135deg, #222, #111); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: 900; color: #ff4d00; font-size: 18px; border: 1px solid #333; }
+.store-item.ativo .store-avatar { border-color: #ff4d00; background: #ff4d00; color: #fff; }
+.store-info { flex: 1; overflow: hidden; }
+.store-info h4 { margin: 0 0 4px 0; font-size: 13px; font-family: 'Orbitron'; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #eee; }
+.store-info p { margin: 0; font-size: 12px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;}
+
+/* CHAT PRINCIPAL */
+.chat-panel { flex: 1; display: flex; flex-direction: column; background: #0a0a0a; position: relative; }
+.chat-header { padding: 20px 30px; background: #0f0f0f; border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; }
+.chat-header-info { display: flex; align-items: center; gap: 15px; }
+.chat-header-info .avatar { width: 45px; height: 45px; border-radius: 12px; background: #ff4d00; color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: 900; font-size: 18px; }
+.chat-header-info h2 { margin: 0; font-family: 'Orbitron'; font-size: 16px; color: #fff; letter-spacing: 0.5px;}
+.chat-header-info .status { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 11px; color: #00cc66; font-weight: 600;}
+
+.chat-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;}
+.chat-messages { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+
+.empty-state { margin: auto; text-align: center; color: #555; max-width: 300px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);}
+.empty-icon { width: 80px; height: 80px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; color: #ff4d00; font-size: 30px;}
+.empty-state h3 { font-family: 'Orbitron'; color: #fff; margin: 0 0 10px 0;}
+.empty-state p { font-size: 13px; line-height: 1.5; margin: 0;}
+
+.mensagem { 
+    max-width: 60%; 
+    padding: 14px 18px; 
+    border-radius: 14px; 
+    font-size: 13px; 
+    line-height: 1.5; 
+    display: flex; 
+    flex-direction: column; 
+    position: relative;
+    /* Linhas adicionadas para forçar a quebra de textos gigantes: */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.mensagem.recebida { 
+    background: #141414; 
+    border: 1px solid #2a2a2a; 
+    align-self: flex-start; 
+    border-top-left-radius: 4px; 
+    color: #eee;
+}
+
+.mensagem.enviada { 
+    background: #fcfaf9; 
+    color: #030303; 
+    align-self: flex-end; 
+    border-top-right-radius: 4px; 
+    box-shadow: 0 5px 15px rgba(255, 77, 0, 0.2);
+}
+
+.mensagem .hora { 
+    font-size: 10px; 
+    align-self: flex-end; 
+    margin-top: 6px; 
+    opacity: 0.7; 
+    font-weight: 600;
+}
+
+.chat-input { padding: 20px 30px; background: #0f0f0f; border-top: 1px solid #1f1f1f; display: flex; gap: 15px; }
+.chat-input input { flex: 1; background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; color: #fff; outline: none; font-family: 'Inter'; font-size: 14px; transition: 0.3s; }
+.chat-input input:focus { border-color: #ff4d00; }
+.btn-send { background: #ff4d00; color: #fff; border: none; width: 55px; height: 55px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.3s; }
+.btn-send:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 77, 0, 0.4); }
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (SISTEMA DE CHAT)    */
+/* COM EFEITO DE ARRASTAR PARA O LADO (SWIPE)*/
+/* ========================================= */
+@media (max-width: 768px) {
+    /* Trava a tela para não rolar para baixo sem querer */
+    body { height: 100dvh !important; overflow: hidden !important; }
+
+    /* O container principal vira um "trilho" de arrastar */
+    .app-container { 
+        height: 100dvh !important; 
+        width: 100vw !important;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important; /* Permite arrastar para o lado */
+        overflow-y: hidden !important;
+        scroll-snap-type: x mandatory !important; /* Faz a tela "encaixar" perfeitamente igual app */
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important; /* Deixa o deslizar suave no dedo */
+    }
+
+    /* Esconde a barra de rolagem horizontal para ficar com cara de app nativo */
+    .app-container::-webkit-scrollbar { display: none !important; }
+
+    /* 1. Painel da esquerda (Lista de Lojas) tem a largura exata de 1 tela */
+    .sidebar-panel {
+        min-width: 100vw !important;
+        width: 100vw !important;
+        flex: 0 0 100vw !important;
+        border-right: none !important;
+        scroll-snap-align: start !important; /* Trava aqui ao deslizar */
+    }
+
+    /* 2. Painel da direita (O Chat) fica logo ao lado direito, também com 1 tela de largura */
+    .chat-panel {
+        min-width: 100vw !important;
+        width: 100vw !important;
+        flex: 0 0 100vw !important;
+        display: flex !important; 
+        position: relative !important;
+        scroll-snap-align: start !important; /* Trava aqui ao deslizar */
+    }
+
+    /* 3. Ajustes de conforto visual no chat */
+    .chat-header { padding: 15px 20px !important; }
+    .chat-messages { padding: 15px !important; }
+    .mensagem { max-width: 85% !important; font-size: 14px !important; padding: 12px 15px !important; }
+    .chat-input { padding: 15px !important; gap: 10px !important; }
+    .chat-input input { padding: 14px 15px !important; }
+    .btn-send { width: 50px !important; height: 50px !important; flex-shrink: 0 !important; }
+}

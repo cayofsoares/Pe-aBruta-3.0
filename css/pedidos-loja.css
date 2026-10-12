@@ -1,0 +1,193 @@
+:root {
+    --primary: #ff4d00;
+    --bg-dark: #0f0f0f;
+    --card-bg: #181818;
+    --text-light: #f2f2f2;
+    --text-dim: #a0a0a0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; overflow-x: hidden; }
+.dashboard-container { display: flex; width: 100%; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar { flex: 0 0 220px; width: 220px; background: #111; padding: 26px 14px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #222; min-height: 100vh; }
+.logo { display: flex; align-items: center; justify-content: center; gap: 4px; font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: #fff; text-decoration: none; white-space: nowrap; }
+.logo span { color: var(--primary); }
+.nav-btn { background: none; border: none; color: var(--text-dim); text-align: left; padding: 12px; font-size: 15px; cursor: pointer; border-radius: 8px; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+.nav-btn.active, .nav-btn:hover { background: rgba(255, 77, 0, 0.1); color: var(--primary); }
+.btn-logout { margin-top: auto; color: #ddd; border: 1px solid #303030; justify-content: center; }
+
+/* Área Principal */
+.content { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 36px 40px; overflow-y: auto; }
+.header-top, .filtros-solicitacoes, .estado-solicitacoes, .solicitacoes-grid { width: 100%; max-width: 1400px; margin-left: auto; margin-right: auto; }
+.header-top h1 { font-family: 'Orbitron', sans-serif; font-size: 28px; margin-bottom: 6px; }
+.header-top p { color: var(--text-dim); font-size: 14px; }
+
+/* Instruções para orientar o lojista no fluxo do mural */
+.solicitacoes-instrucoes {
+    width: 100%;
+    max-width: 1400px;
+    margin: 20px auto 0;
+    padding: 18px 20px;
+    color: var(--text-light);
+    background: linear-gradient(135deg, #1b1a18, #171615);
+    border: 1px solid #3b332b;
+    border-left: 4px solid #ffb347;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.solicitacoes-instrucoes h2 { margin-bottom: 12px; color: #ffd28a; font-size: 16px; line-height: 1.4; }
+.solicitacoes-instrucoes ol { display: grid; gap: 10px; padding-left: 22px; }
+.solicitacoes-instrucoes li { padding-left: 4px; color: #d1d1d1; font-size: 13px; line-height: 1.6; }
+.solicitacoes-instrucoes li::marker { color: #ff9a3d; font-weight: 800; }
+.solicitacoes-instrucoes strong { color: #fff; }
+.solicitacoes-instrucoes .passo-crucial {
+    padding: 10px 12px;
+    color: #ffe0cc;
+    background: rgba(255, 77, 0, 0.12);
+    border: 1px solid rgba(255, 106, 42, 0.38);
+    border-left: 3px solid #ff5a36;
+    border-radius: 7px;
+}
+.solicitacoes-instrucoes .passo-crucial strong { color: #ff9a75; }
+
+/* Filtros e Busca */
+.filtros-solicitacoes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin: 24px auto 16px; }
+.busca-solicitacoes { flex: 1; min-width: 280px; height: 46px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: #151515; border: 1px solid #303030; border-radius: 9px; color: var(--text-dim); transition: 0.2s; }
+.busca-solicitacoes:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.12); }
+.busca-solicitacoes input { width: 100%; height: 100%; color: #fff; background: transparent; border: 0; outline: 0; font: inherit; }
+.busca-solicitacoes input::placeholder { color: #737373; }
+
+.filtro-categoria-wrap { flex: 0 0 260px; display: flex; flex-direction: column; gap: 6px; color: var(--text-dim); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.filtro-categoria { width: 100%; height: 46px; padding: 0 14px; color: #f2f2f2; background: #151515; border: 1px solid #303030; border-radius: 9px; font: inherit; font-size: 13px; cursor: pointer; transition: 0.2s; }
+.filtro-categoria:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 77, 0, 0.12); }
+.filtro-categoria option { background: #151515; }
+.estado-solicitacoes { margin-bottom: 20px; color: var(--text-dim); font-size: 13px; font-weight: 600; }
+
+/* Grid de Solicitações */
+/* align-items: start evita que cartões com pouco texto estiquem para igualar os maiores */
+.solicitacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+
+/* Cartão da Solicitação - COMPRIMIDO */
+.solic-card { background: var(--card-bg); border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.2s; }
+.solic-card:hover { border-color: #444; transform: translateY(-3px); }
+
+.solic-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 2px; }
+.cliente-nome { font-weight: 600; font-size: 13px; color: #fff; display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; }
+.data-solic { font-size: 10px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+
+.categoria-badge { display: inline-block; background: rgba(255, 77, 0, 0.1); color: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; width: fit-content; border: 1px solid rgba(255, 77, 0, 0.2); }
+.solic-peca { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* Carrossel de Mídias - ALTURA REDUZIDA PARA 170px */
+.solic-carousel { position: relative; width: 100%; height: 170px; overflow: hidden; border: 1px solid #292929; border-radius: 8px; background: #090909; margin: 4px 0; flex-shrink: 0; }
+.solic-carousel-palco { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.solic-carousel-palco img, .solic-carousel-palco video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.solic-carousel-btn { position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 28px; height: 28px; color: #fff; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; font-size: 14px; cursor: pointer; transform: translateY(-50%); transition: 0.2s; }
+.solic-carousel-btn:hover { background: var(--primary); border-color: var(--primary); }
+.solic-carousel-btn.anterior { left: 6px; }
+.solic-carousel-btn.proximo { right: 6px; }
+.solic-carousel-contador { position: absolute; right: 6px; bottom: 6px; padding: 3px 6px; color: #fff; background: rgba(0, 0, 0, 0.8); border-radius: 12px; font-size: 10px; font-weight: 600; z-index: 2; }
+
+/* Descrição com Clamp */
+.solic-descricao-wrap { flex: 1; display: flex; flex-direction: column; }
+.peca-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: #ccc; line-height: 1.45; }
+.peca-desc.expandida { display: block; -webkit-line-clamp: unset; }
+.btn-ler-mais { align-self: flex-start; margin-top: 4px; color: var(--primary); background: none; border: 0; font-size: 11px; font-weight: 700; cursor: pointer; }
+.btn-ler-mais:hover { text-decoration: underline; }
+.btn-ler-mais[hidden] { display: none; }
+
+/* Endereço e Ações - ESPAÇAMENTOS REDUZIDOS */
+.solic-endereco { display: flex; align-items: center; gap: 6px; padding: 10px; background: #151515; border: 1px solid #292929; border-radius: 8px; color: var(--text-dim); font-size: 11px; line-height: 1.3; margin-top: 8px; }
+.solic-acoes { display: flex; gap: 8px; margin-top: 10px; }
+.solic-acoes button { flex: 1; padding: 10px; font-size: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-mensagem { background: #25D366; color: #fff; border: none; }
+.btn-mensagem:hover { background: #20bd5a; }
+.btn-assumir { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+.btn-assumir:hover { background: var(--primary); color: #fff; }
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (PEDIDOS DA LOJA)    */
+/* CORREÇÃO DO MENU LATERAL E TAMANHOS       */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* 1. O SEGREDO: Coloca o menu em cima e o conteúdo embaixo */
+    .dashboard-container {
+        flex-direction: column !important;
+    }
+
+    /* 2. "Cortar esse lado": O menu lateral vira uma barra horizontal rolável no topo */
+    .sidebar {
+        width: 100% !important;
+        flex: none !important;
+        min-height: auto !important;
+        flex-direction: row !important;
+        padding: 10px !important;
+        overflow-x: auto !important; /* Permite arrastar os botões para o lado com o dedo */
+        border-right: none !important;
+        border-bottom: 1px solid #222 !important;
+        gap: 10px !important;
+    }
+
+    .sidebar .logo { display: none !important; } /* Esconde a logo para dar espaço aos botões */
+
+    .nav-btn {
+        padding: 8px 15px !important;
+        white-space: nowrap !important; /* Impede que o botão quebre de linha */
+        flex: 0 0 auto !important;
+    }
+
+    /* Traz o texto dos botões de volta, mas num tamanho ideal */
+    .nav-btn span { 
+        display: inline-block !important; 
+        font-size: 12px !important; 
+    }
+    
+    .nav-btn i { font-size: 14px !important; margin-right: 5px !important; }
+
+    .btn-logout { margin-top: 0 !important; margin-left: auto !important; }
+
+    /* 3. Liberdade para o conteúdo: agora ocupa 100% da tela */
+    .content {
+        width: 100% !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-top h1 { font-size: 20px !important; }
+
+    /* 4. Diminuindo o Quadro de Instruções Gigante */
+    .solicitacoes-instrucoes {
+        padding: 15px !important;
+        margin-top: 5px !important;
+    }
+
+    .solicitacoes-instrucoes h2 {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .solicitacoes-instrucoes ol {
+        padding-left: 15px !important;
+        gap: 8px !important;
+    }
+
+    .solicitacoes-instrucoes li {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+    }
+
+    .solicitacoes-instrucoes .passo-crucial {
+        padding: 10px !important;
+        font-size: 10px !important;
+        margin-top: 5px !important;
+    }
+
+    /* 5. Grelha e Cartões respirando com o espaço novo */
+    .solicitacoes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+}

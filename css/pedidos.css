@@ -1,0 +1,257 @@
+body { 
+    background: #050505; 
+    color: white; 
+    font-family: 'Inter', sans-serif; 
+    margin: 0;
+}
+
+.pedidos-container { 
+    max-width: 800px; 
+    margin: 50px auto; 
+    padding: 20px; 
+}
+
+.titulo-secao { 
+    font-family: 'Orbitron'; 
+    color: #ff4d00; 
+    margin-bottom: 30px; 
+    border-left: 4px solid #ff4d00; 
+    padding-left: 15px; 
+}
+
+.card-pedido { 
+    background: #111; 
+    border: 1px solid #222; 
+    border-radius: 12px; 
+    padding: 20px; 
+    margin-bottom: 20px; 
+    position: relative; 
+}
+
+.pedido-header { 
+    display: flex; 
+    justify-content: space-between; 
+    border-bottom: 1px solid #222; 
+    padding-bottom: 15px; 
+    margin-bottom: 15px; 
+    align-items: center; 
+}
+
+.pedido-id { 
+    font-family: 'Orbitron'; 
+    font-size: 0.9rem; 
+    color: #ff4d00; 
+}
+
+.pedido-data { 
+    font-size: 0.8rem; 
+    color: #666; 
+}
+
+/* Botão de Excluir */
+.btn-excluir-pedido {
+    background: transparent;
+    color: #444;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 800;
+    transition: 0.3s;
+}
+
+.btn-excluir-pedido:hover {
+    background: #220000;
+    color: #ff3333;
+    border-color: #ff3333;
+}
+
+.pedido-itens { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.item-linha { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.item-img { 
+    width: 50px; 
+    height: 50px; 
+    object-fit: cover; 
+    border-radius: 6px; 
+    border: 1px solid #333; 
+}
+
+.pedido-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-top: 15px; 
+    padding-top: 15px; 
+    border-top: 1px dotted #333; 
+}
+
+.status-badge { 
+    background: #002200; 
+    color: #00ff00; 
+    padding: 5px 12px; 
+    border-radius: 20px; 
+    font-size: 10px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+}
+
+.valor-total { 
+    font-weight: 900; 
+    color: #fff; 
+    font-size: 1.1rem; 
+}
+
+.badge-quantidade {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 106, 42, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 106, 42, 0.12);
+    color: #ffab7e;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Estilização do Logo e Seta para manter o padrão */
+.logo { 
+    color: white; 
+    transition: 0.3s ease; 
+    display: inline-block; 
+    cursor: pointer; 
+}
+.logo span { 
+    color: #ff4d00; 
+}
+.navbar {
+    display: flex;
+    align-items: center;
+    background: #111;
+    padding: 15px 20px;
+    border-bottom: 1px solid #222;
+}
+.logo-link { 
+    text-decoration: none; 
+    margin-right: auto; 
+    margin-left: 20px; 
+}
+.logo-link:hover .logo { 
+    transform: scale(1.05); 
+    text-shadow: 0 0 15px rgba(255, 77, 0, 0.3);
+}
+.back-link { 
+    text-decoration: none; 
+    padding-left: 20px; 
+    font-weight: 900; 
+    font-size: 24px; 
+    color: #ff4d00; 
+    transition: 0.3s;
+}
+.back-link:hover { 
+    transform: translateX(-5px); 
+}
+
+
+/* ========================================= */
+/* AJUSTES PARA CELULAR (MEUS PEDIDOS)       */
+/* VERSÃO EXTREMAMENTE COMPACTA E SEPARADA   */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* 1. Navbar compacta */
+    .navbar { padding: 10px 15px !important; }
+    .back-link { padding-left: 0 !important; font-size: 18px !important; }
+    .logo-link { margin-left: 15px !important; }
+    .logo { font-size: 1rem !important; }
+
+    /* 2. Container Principal */
+    .pedidos-container {
+        margin: 10px auto !important;
+        padding: 0 15px !important;
+    }
+    .titulo-secao {
+        font-size: 1rem !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 3. O Cartão do Pedido (SEPARAÇÃO GIGANTE E APERTADO POR DENTRO) */
+    .card-pedido {
+        padding: 10px !important; /* Margem interna super fina */
+        margin-bottom: 50px !important; /* Espaço GIGANTE entre um pedido e outro */
+        border-radius: 8px !important;
+    }
+
+    /* 4. Cabeçalho do Cartão */
+    .pedido-header {
+        flex-direction: column !important; 
+        align-items: flex-start !important;
+        gap: 3px !important;
+        position: relative !important; 
+        padding-bottom: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* REGISTRO DO PEDIDO MICRO */
+    .pedido-id {
+        font-size: 0.55rem !important; /* Texto no menor tamanho legível (~9px) */
+        line-height: 1.1 !important;
+    }
+
+    .pedido-data {
+        font-size: 0.55rem !important;
+    }
+
+    /* Lixeira flutuante micro */
+    .btn-excluir-pedido {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        padding: 3px 6px !important;
+        font-size: 8px !important;
+    }
+
+    /* 5. Itens do Pedido (Miniaturas Extremas) */
+    .pedido-itens {
+        gap: 8px !important; 
+    }
+    .item-linha {
+        gap: 8px !important;
+        font-size: 10px !important; /* Texto do produto bem pequeno */
+    }
+    .item-img {
+        width: 32px !important; /* Foto minúscula */
+        height: 32px !important;
+        border-radius: 4px !important;
+    }
+    .badge-quantidade {
+        font-size: 8px !important;
+        padding: 2px 4px !important;
+    }
+
+    /* 6. Rodapé do Pedido (Status e Valor) */
+    .pedido-footer {
+        margin-top: 8px !important; 
+        padding-top: 8px !important;
+    }
+    
+    .status-badge {
+        font-size: 7px !important; /* Etiqueta micro */
+        padding: 3px 5px !important;
+    }
+
+    .valor-total {
+        font-size: 0.85rem !important; /* Valor financeiro pequeno */
+    }
+}

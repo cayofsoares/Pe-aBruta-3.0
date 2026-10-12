@@ -1,0 +1,224 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    background-color: #030303; 
+    color: #fff; 
+    font-family: 'Inter', sans-serif; 
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 250px; /* Garante que a lista de categorias abra para baixo */
+    overflow-x: hidden;
+}
+
+/* ============================================== */
+/* FUNDO E NAVBAR */
+/* ============================================== */
+.bg-glow {
+    position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 60vw; height: 50vh; background: radial-gradient(circle, rgba(255,77,0,0.15) 0%, rgba(0,0,0,0) 70%);
+    filter: blur(60px); z-index: -2;
+}
+.bg-grid {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 30px 30px; z-index: -1;
+}
+
+.navbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 5%; background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(10px); 
+    border-bottom: 1px solid rgba(255, 77, 0, 0.2); position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; color: #fff; text-decoration: none;}
+.logo span { color: #ff4d00; }
+.btn-voltar {
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa; padding: 8px 16px; border-radius: 4px; font-family: 'Orbitron'; 
+    font-size: 11px; cursor: pointer; transition: 0.3s;
+}
+.btn-voltar:hover { background: rgba(255, 77, 0, 0.1); border-color: #ff4d00; color: #ff4d00; }
+
+/* ============================================== */
+/* CABEÇALHO E MÓDULOS DO FORMULÁRIO */
+/* ============================================== */
+.header-impacto { text-align: center; padding: 50px 20px 30px; }
+.header-impacto h1 { font-family: 'Orbitron'; font-size: 32px; font-weight: 900; color: #eee; margin-bottom: 10px; }
+.header-impacto h1 span { color: #ff4d00; text-shadow: 0 0 20px rgba(255,77,0,0.4); }
+.header-impacto p { color: #888; font-size: 15px; max-width: 600px; margin: 0 auto; }
+
+.container-master { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+.form-futurista { display: flex; flex-direction: column; gap: 25px; }
+
+.modulo-form {
+    background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05); border-left: 3px solid #ff4d00;
+    border-radius: 10px; padding: 25px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+.modulo-form:hover { transform: translateY(-2px); background: rgba(20, 20, 20, 0.8); }
+
+.modulo-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;}
+.modulo-icone { font-size: 20px; }
+.modulo-header h3 { font-family: 'Orbitron'; font-size: 14px; color: #ccc; }
+
+/* ============================================== */
+/* CAMPOS DE TEXTO E SELECT PADRÃO */
+/* ============================================== */
+.row-flex { display: flex; gap: 20px; }
+.input-box { display: flex; flex-direction: column; width: 100%; }
+.box-large { flex: 2; }
+.box-small { flex: 1; }
+
+.input-box label { font-size: 10px; font-family: 'Orbitron'; font-weight: 700; color: #777; margin-bottom: 8px; }
+
+.input-box input, .input-box select, .input-box textarea {
+    background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff; padding: 15px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px;
+    transition: all 0.3s ease;
+}
+.input-box select { cursor: pointer; }
+.input-box select option { background-color: #111; color: #fff; }
+
+.input-box input:focus, .input-box select:focus, .input-box textarea:focus {
+    background: rgba(0, 0, 0, 0.8); border-color: #ff4d00; box-shadow: 0 0 15px rgba(255, 77, 0, 0.2); outline: none;
+}
+.input-bloqueado { background: rgba(255,255,255,0.02) !important; color: #555 !important; cursor: not-allowed; }
+.input-box textarea { min-height: 100px; resize: vertical; }
+.dica-neon { font-size: 11px; color: #ff8c00; margin-top: 8px; text-shadow: 0 0 10px rgba(255,140,0,0.3); display: block;}
+
+/* ============================================== */
+/* ZONA DE UPLOAD E BOTÃO */
+/* ============================================== */
+.upload-zone {
+    position: relative; width: 100%; background: rgba(0,0,0,0.3); border: 2px dashed rgba(255,77,0,0.3);
+    border-radius: 8px; padding: 40px 20px; text-align: center; cursor: pointer; transition: 0.3s;
+}
+.upload-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+.upload-zone:hover { border-color: #ff4d00; background: rgba(255,77,0,0.05); }
+.icone-nuvem { font-size: 35px; margin-bottom: 10px; }
+.upload-visual h4 { color: #eee; font-size: 16px; margin-bottom: 5px; }
+.upload-visual p { color: #666; font-size: 12px; }
+.arquivo-status { text-align: center; font-size: 12px; color: #555; margin-top: 15px; }
+
+.btn-neon {
+    width: 100%; background: linear-gradient(90deg, #ff4d00, #ff7300);
+    color: #fff; border: none; padding: 20px; border-radius: 8px;
+    font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900;
+    cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(255, 77, 0, 0.4); margin-top: 10px;
+}
+.btn-neon:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255, 77, 0, 0.6); }
+
+/* ============================================== */
+/* ALERTA DE SEGURANÇA E RESPONSIVIDADE */
+/* ============================================== */
+.alerta-customizado {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #111; border-left: 4px solid #ff4d00; border-radius: 4px;
+    padding: 15px 25px; display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999;
+    opacity: 0; visibility: hidden; transition: all 0.4s ease;
+}
+.alerta-customizado.mostrar { opacity: 1; visibility: visible; top: 30px; }
+
+@media (max-width: 768px) {
+    .row-flex { flex-direction: column; gap: 20px; }
+}
+
+/* ============================================== */
+/* VARIAÇÃO DO ALERTA PARA SUCESSO */
+/* ============================================== */
+.alerta-customizado.sucesso {
+    border-left: 4px solid #00cc66; /* Verde neon premium */
+}
+.alerta-customizado.sucesso .alerta-texto h4 {
+    color: #00cc66;
+}
+
+/* Ajustes para celulares e telas estreitas */
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    body { padding-bottom: 150px; }
+
+    .navbar {
+        width: 100%;
+        padding: 12px 18px;
+        gap: 12px;
+    }
+
+    .logo { font-size: clamp(17px, 4.5vw, 22px); }
+    .btn-voltar { flex: 0 0 auto; padding: 9px 13px; }
+
+    .header-impacto { padding: 34px 18px 24px; }
+    .header-impacto h1 { font-size: clamp(22px, 5vw, 29px); line-height: 1.3; }
+    .header-impacto p { max-width: 620px; font-size: 14px; line-height: 1.65; }
+
+    .container-master {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 16px;
+    }
+
+    .form-futurista { gap: 16px; }
+    .modulo-form { padding: 20px 18px; }
+    .modulo-header { align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+    .modulo-header h3 { font-size: 12px; line-height: 1.5; }
+    .row-flex { flex-direction: column; gap: 14px; }
+    .box-large, .box-small { width: 100%; flex: 1 1 auto; }
+
+    .input-box input,
+    .input-box select,
+    .input-box textarea { width: 100%; min-width: 0; font-size: 16px; }
+
+    .upload-zone { padding: 30px 16px; }
+    .upload-visual h4 { font-size: 14px; line-height: 1.5; }
+    .upload-visual p { line-height: 1.5; }
+    .btn-neon { padding: 16px 14px; font-size: 13px; line-height: 1.5; }
+
+    .alerta-customizado {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
+        padding: 13px 15px;
+        gap: 10px;
+        transform: none;
+    }
+    .alerta-customizado.mostrar { top: 12px; }
+    .alerta-texto { min-width: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 480px) {
+    body { padding-bottom: 110px; }
+
+    .navbar { padding: 11px 12px; }
+    .logo { font-size: 17px; }
+    .btn-voltar { padding: 8px 10px; font-size: 10px; }
+
+    .header-impacto { padding: 26px 14px 20px; }
+    .header-impacto h1 { font-size: 21px; }
+    .header-impacto p { font-size: 13px; }
+
+    .container-master { padding: 0 11px; }
+    .form-futurista { gap: 13px; }
+    .modulo-form { padding: 17px 14px; border-radius: 8px; }
+    .modulo-header { padding-bottom: 12px; }
+    .modulo-header h3 { font-size: 11px; }
+    .modulo-icone { font-size: 17px; }
+    .input-box label { font-size: 9px; line-height: 1.5; }
+
+    .input-box input,
+    .input-box select,
+    .input-box textarea { padding: 13px 12px; }
+
+    .upload-zone { padding: 24px 12px; }
+    .icone-nuvem { font-size: 29px; }
+    .btn-neon { font-size: 11px; }
+    .alerta-customizado { padding: 11px 12px; }
+}

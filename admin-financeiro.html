@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080808">
+    <title>Transferência Financeira | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/admin-financeiro.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <main class="financeiro-shell">
+        <header class="financeiro-header">
+            <div>
+                <a class="link-voltar" href="admin-pb-secret.html"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar à Central</a>
+                <p class="eyebrow">PEÇA BRUTA · ADMINISTRAÇÃO</p>
+                <h1>TRANSFERÊNCIA <span>FINANCEIRA</span></h1>
+                <p class="subtitulo">Acompanhe os repasses pendentes e consulte o histórico das transferências concluídas.</p>
+            </div>
+            <button id="btn-atualizar" class="btn-atualizar" type="button">
+                <i class="fas fa-rotate-right" aria-hidden="true"></i> Atualizar dados
+            </button>
+        </header>
+
+        <aside class="aviso-repasse" role="note">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <p>O painel mostra somente o valor líquido de <strong>90%</strong> de cada pedido aprovado. O repasse é manual e a confirmação da transferência deve ser acompanhada fora da plataforma.</p>
+        </aside>
+
+        <section class="resumo-financeiro" aria-label="Resumo dos repasses">
+            <article class="resumo-card">
+                <span>Pedidos aguardando repasse</span>
+                <strong id="total-pedidos">—</strong>
+            </article>
+            <article class="resumo-card">
+                <span>Lojistas com vendas</span>
+                <strong id="total-lojistas">—</strong>
+            </article>
+            <article class="resumo-card resumo-destaque">
+                <span>Total líquido a transferir</span>
+                <strong id="total-liquido">—</strong>
+            </article>
+        </section>
+
+        <div id="status-financeiro" class="status-financeiro" role="status" aria-live="polite">Verificando acesso administrativo…</div>
+
+        <section class="financeiro-secao" aria-labelledby="titulo-pendentes">
+            <header class="cabecalho-secao-financeira">
+                <div>
+                    <p class="etapa-financeira">ETAPA 1</p>
+                    <h2 id="titulo-pendentes">Aguardando Repasse</h2>
+                    <p>Pedidos com recebimento confirmado pelo cliente e transferência ainda pendente.</p>
+                </div>
+                <span id="contador-pendentes" class="contador-secao">0 pedidos</span>
+            </header>
+            <section id="lista-lojistas" class="lista-lojistas" aria-label="Pedidos aguardando repasse agrupados por lojista"></section>
+        </section>
+
+        <section class="financeiro-secao secao-historico" aria-labelledby="titulo-historico">
+            <header class="cabecalho-secao-financeira">
+                <div>
+                    <p class="etapa-financeira">ETAPA 2</p>
+                    <h2 id="titulo-historico">Histórico de Repasses / Concluídos</h2>
+                    <p>Transferências confirmadas e mantidas para consulta.</p>
+                </div>
+                <span id="contador-historico" class="contador-secao contador-concluido">0 pedidos</span>
+            </header>
+            <section id="lista-historico" class="lista-lojistas" aria-label="Histórico de repasses concluídos agrupados por lojista"></section>
+        </section>
+    </main>
+
+    <script src="JS/admin-financeiro.js"></script>
+</body>
+</html>

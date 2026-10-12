@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postar Peça | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/painel-lojista.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        
+    </style>
+</head>
+<body>
+
+    <header class="painel-header">
+        <a href="feed.html" class="back-link">← VOLTAR AO FEED</a>
+        <div class="logo"><a href="feed.html">PEÇA<span>BRUTA</span></a></div>
+        <div class="shop-badge">CADASTRAR PRODUTO</div>
+    </header>
+
+    <main class="painel-main">
+        <section class="form-card-premium">
+            <div class="form-header">
+                <h1>ANUNCIAR NOVA PEÇA</h1>
+                <p>O preço final incluirá a taxa de 10% da plataforma.</p>
+            </div>
+
+            <form id="formPublicarPeca" style="margin-top: 30px;">
+                <div class="upload-section">
+                    <label>Fotos do Produto</label>
+                    <div class="upload-dropzone" onclick="document.getElementById('multipleFileInput').click()">
+                        <span class="icon">📸</span>
+                        <p>ADICIONAR FOTOS</p>
+                    </div>
+                    <input type="file" id="multipleFileInput" multiple accept="image/*" hidden>
+                    
+                    <div class="image-gallery-preview" id="galleryPreview"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>Título da Peça</label>
+                    <input type="text" id="tituloPeca" placeholder="Ex: Motor AP 1.8 Turbinado" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Categoria</label>
+                    <select id="categoria" name="categoria" required style="width: 100%; padding: 10px; background-color: #222; color: #fff; border: 1px solid #444; border-radius: 5px;">
+                        <option value="" disabled selected>Carregando categorias...</option>
+                    </select>
+                    <p id="descricao-categoria" style="color: #aaa; font-size: 13px; margin-top: 5px; font-style: italic;"></p>
+                </div>
+
+                <div class="input-group">
+                    <label>Preço Sugerido (R$)</label>
+                    <input type="number" id="precoPeca" step="0.01" placeholder="0,00" oninput="calcularPrecoFinal()" required>
+                    <div class="comissao-info" id="infoPreco">Preço no site: <b>R$ 0,00</b></div>
+                </div>
+
+
+
+                <div class="input-group">
+                    <label>Descrição</label>
+                    <textarea id="descricaoPeca" rows="5" placeholder="Descreva os detalhes da peça, estado de conservação, etc..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="visibilidadeProduto">Visibilidade do anúncio</label>
+                    <select id="visibilidadeProduto" name="visibilidade" required style="width: 100%; padding: 10px; background-color: #222; color: #fff; border: 1px solid #444; border-radius: 5px;">
+                        <option value="publico" selected>Público (Aparece no Feed)</option>
+                        <option value="reservado">Reservado (Oculto - Apenas via Link Direto)</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="btnPublish" class="btn-publish-brutal">PUBLICAR ANÚNCIO NO FEED</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- ALERTA DE SUCESSO CUSTOMIZADO (TOAST)          -->
+    <!-- ============================================== -->
+    <div id="alertaSucesso" class="alerta-customizado sucesso">
+        <span class="alerta-icone">✅</span>
+        <div class="alerta-texto">
+            <h4>ANÚNCIO PUBLICADO!</h4>
+            <p>O produto já está disponível no feed para os clientes.</p>
+        </div>
+    </div>
+
+    <script src="JS/painel-lojista.js"></script>
+</body>
+</html>
