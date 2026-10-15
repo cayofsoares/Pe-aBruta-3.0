@@ -5,7 +5,7 @@ const API_URL = (() => {
     const hostname = window.location.hostname;
     // Em teste local, sempre consulta o Node local, mesmo que a sessão tenha
     // guardado uma URL antiga do DevTunnel.
-    if (hostname.includes('127.0.0.1') || hostname.includes('localhost')) {
+    if (['127.0.0.1', 'localhost'].includes(hostname)) {
         return `http://${hostname}:3000/api`;
     }
 
@@ -17,8 +17,8 @@ const API_URL = (() => {
             const caminhoApiValido = apiSalva.pathname.replace(/\/+$/, '') === '/api';
             const apiLocalValida = apiSalva.protocol === 'http:' &&
                 ['localhost', '127.0.0.1'].includes(apiSalva.hostname) && apiSalva.port === '3000';
-            const apiTunelValida = apiSalva.origin === 'https://64xd3fbf-3000.brs.devtunnels.ms';
-            if (caminhoApiValido && (apiLocalValida || apiTunelValida)) {
+            const apiRenderValida = apiSalva.origin === 'https://api.pecabruta.com.br';
+            if (caminhoApiValido && (apiLocalValida || apiRenderValida)) {
                 return `${apiSalva.origin}/api`;
             }
         } catch (erro) {
@@ -26,22 +26,18 @@ const API_URL = (() => {
         }
     }
 
-    return 'https://64xd3fbf-3000.brs.devtunnels.ms/api';
+    return 'https://api.pecabruta.com.br/api';
 })();
 
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
-        'bypass-tunnel-reminder': 'true',
-        'ngrok-skip-browser-warning': '69420'
     };
     return fetch(url, { ...options, headers });
 }
 
 function apiHeaders(extra = {}) {
     return {
-        'bypass-tunnel-reminder': 'true',
-        'ngrok-skip-browser-warning': '69420',
         ...extra
     };
 }

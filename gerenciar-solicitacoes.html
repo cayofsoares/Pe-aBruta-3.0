@@ -310,9 +310,9 @@
         // 1. CONFIGURAÇÕES GERAIS E CONEXÃO
         // Centraliza a URL para evitar erros de CORS (Altere caso seu backend rode em outro host/porta)
         // ==========================================
-        const API_BASE_URL = window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('localhost')
+        const API_BASE_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
             ? 'http://localhost:3000/api'
-            : 'https://64xd3fbf-3000.brs.devtunnels.ms/api';
+            : 'https://api.pecabruta.com.br/api';
 
         // ==========================================
         // 2. SEGURANÇA E AUTENTICAÇÃO
@@ -408,8 +408,6 @@
                 const response = await fetch(`${API_BASE_URL}/admin/dados`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'bypass-tunnel-reminder': 'true',
-                        'ngrok-skip-browser-warning': '69420'
                     }
                 });
                 
@@ -671,8 +669,6 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
-                        'bypass-tunnel-reminder': 'true',
-                        'ngrok-skip-browser-warning': '69420'
                     },
                     body: JSON.stringify({ status: novoStatus })
                 });

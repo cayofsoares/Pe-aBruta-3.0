@@ -1,11 +1,9 @@
-const API_URL = window.location.hostname.includes('127.0.0.1') || window.location.hostname.includes('localhost')
+const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
     ? `http://${window.location.hostname}:3000/api`
-    : 'https://64xd3fbf-3000.brs.devtunnels.ms/api';
+    : 'https://api.pecabruta.com.br/api';
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
-        'bypass-tunnel-reminder': 'true',
-        'ngrok-skip-browser-warning': '69420'
     };
     return fetch(url, { ...options, headers });
 }

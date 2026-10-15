@@ -52,9 +52,34 @@ const transporter = nodemailer.createTransport({
 // --- 🛡️ MIDDLEWARES DE SEGURANÇA (OWASP) ---
 app.use(helmet());
 
+const corsAllowedOrigins = new Set([
+    'https://pecabruta.com.br',
+    'https://www.pecabruta.com.br',
+    'https://dancing-mermaid-ca2ef7.netlify.app',
+    ...(process.env.CORS_ALLOWED_ORIGINS || '')
+        .split(',')
+        .map(origin => origin.trim())
+        .filter(Boolean)
+]);
+
 app.use(cors({
-    origin: '*', // Permite que o Netlify comunique com o servidor
-    allowedHeaders: ['Content-Type', 'Authorization', 'bypass-tunnel-reminder', 'ngrok-skip-browser-warning']
+    origin: (origin, callback) => {
+        // Chamadas sem Origin (ex.: health checks e ferramentas server-to-server)
+        // não são acessos de navegador e não precisam de cabeçalho CORS.
+        if (!origin) return callback(null, true);
+
+        let isLocalhost = false;
+        try {
+            const parsedOrigin = new URL(origin);
+            isLocalhost = parsedOrigin.protocol === 'http:' &&
+                ['localhost', '127.0.0.1', '[::1]'].includes(parsedOrigin.hostname);
+        } catch (erro) {
+            // Origem malformada não é liberada.
+        }
+
+        return callback(null, isLocalhost || corsAllowedOrigins.has(origin));
+    },
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '50mb' }));
@@ -64,6 +89,15 @@ app.use((req, res, next) => {
     if (req.body) req.body = mongoSanitize.sanitize(req.body);
     if (req.params) req.params = mongoSanitize.sanitize(req.params);
     next();
+});
+
+// Health check para o Render: só considera a API pronta quando o MongoDB conectou.
+app.get('/api/health', (req, res) => {
+    const bancoConectado = mongoose.connection.readyState === 1;
+    return res.status(bancoConectado ? 200 : 503).json({
+        ok: bancoConectado,
+        database: bancoConectado ? 'connected' : 'disconnected'
+    });
 });
 
 const paginasAdministrativas = new Set([
@@ -2479,4 +2513,5 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
     }
 });
 
-app.listen(3000, '0.0.0.0', () => console.log("🚀 MOTOR PEÇA BRUTA ATIVO - PREPARADO PARA MILHARES DE ACESSOS EM PRODUÇÃO"));
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, '0.0.0.0', () => console.log(`🚀 MOTOR PEÇA BRUTA ATIVO NA PORTA ${port}`));
