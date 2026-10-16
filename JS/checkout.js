@@ -1,6 +1,6 @@
 // Substitua pela sua PUBLIC KEY verdadeira
 const mp = new MercadoPago('APP_USR-f573e41d-3bda-49c3-9a0b-b1d77d7e4114', { locale: 'pt-BR' });
-const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname) ? 'http://localhost:3000/api' : 'https://api.pecabruta.com.br/api';
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 
 function apiFetch(url, options = {}) {
     const headers = {

@@ -40,8 +40,8 @@ app.set('trust proxy', 1);
 // Agora respeita estritamente o .env e configura o SSL/TLS dinamicamente pela porta
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_PORT === '465',
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -610,6 +610,18 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
 
         const usuarioExistente = await Usuario.findOne({ email: emailSanitizado });
         if (usuarioExistente) {
+            // Recupera o fluxo se a conta foi salva, mas a tela de ativação não chegou a abrir.
+            // Exige o CPF já vinculado à conta e não cria um segundo usuário.
+            const cpfExistenteDoUsuario = String(usuarioExistente.cpf || '').replace(/\D/g, '');
+            if (!usuarioExistente.emailVerificado && cpfExistenteDoUsuario === cpfSanitizado) {
+                return res.status(201).json({
+                    success: true,
+                    pendingActivation: true,
+                    email: usuarioExistente.email,
+                    nome: usuarioExistente.nome,
+                    message: 'Seu cadastro ainda precisa de ativação. Informe o código enviado ou solicite um novo código.'
+                });
+            }
             return res.status(400).json({ error: 'Este e-mail já está cadastrado no sistema.' });
         }
 
@@ -623,7 +635,7 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
         const ipOrigem = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
 
         // MELHORIA: Geração de Token Numérico (6 dígitos)
-        const codigoVerificacao = Math.floor(100000 + Math.random() * 900000).toString();
+        const codigoVerificacao = crypto.randomInt(100000, 1000000).toString();
         
         // Define a expiração para 15 minutos a partir de agora
         const dataExpiracao = new Date();
@@ -649,34 +661,54 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
 
         await novoUsuario.save();
 
-        // MELHORIA: Disparo do E-mail com Código Numérico
+        // Só confirma o cadastro depois que o servidor SMTP aceitar o envio do código.
         try {
-            await transporter.sendMail({
+            const nomeSeguroEmail = escaparHTMLDeEmail(nome.trim());
+            const textoEmail = `Obrigado por se registar! O seu código de verificação é: ${codigoVerificacao}. Introduza este código para ativar a sua conta.`;
+            const mailOptions = {
                 from: process.env.SMTP_FROM,
                 replyTo: process.env.SMTP_USER,
                 to: emailSanitizado,
-                subject: 'Seu código de ativação - Peça Bruta',
-                text: `Olá, ${nome.trim()}! Falta apenas um passo para ativar sua conta na Peça Bruta. Use o código de segurança ${codigoVerificacao} para confirmar seu e-mail. Este código é válido por 15 minutos. Se você não solicitou este cadastro, ignore esta mensagem.`,
-                html: `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
-                          <h2 style="color: #ff4d00; text-align: center; font-family: 'Arial Black', sans-serif;">PEÇA BRUTA</h2>
-                          <p>Olá, <strong>${nome.trim()}</strong>!</p>
-                          <p>Falta apenas um passo para ativar sua conta e acessar nossa plataforma.</p>
-                          <p>Use o código de segurança de 6 dígitos abaixo para confirmar seu e-mail. Este código é válido por <strong>15 minutos</strong>.</p>
-                          
-                          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px; margin: 30px 0;">
-                              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #333;">${codigoVerificacao}</span>
-                          </div>
-                          
-                          <p style="font-size: 14px;">Por favor, digite este código na tela de confirmação do site.</p>
-                          <p style="font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">Se você não solicitou este cadastro, pode ignorar este e-mail com segurança.</p>
-                       </div>`
-            });
-            console.log(`📩 Código de verificação enviado com sucesso para ${emailSanitizado}`);
+                subject: 'Código de Ativação - Peça Bruta 🔐',
+                text: textoEmail,
+                html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+                    <p>Olá, <strong>${nomeSeguroEmail}</strong>.</p>
+                    <p>Obrigado por se registar! O seu código de verificação é:</p>
+                    <p style="font-size: 28px; font-weight: bold; letter-spacing: 5px;">${codigoVerificacao}</p>
+                    <p>Introduza este código para ativar a sua conta. Ele é válido por 15 minutos.</p>
+                </div>`
+            };
+            let timeoutEnvio;
+            const resultadoEmail = await Promise.race([
+                transporter.sendMail(mailOptions),
+                new Promise((_, reject) => {
+                    timeoutEnvio = setTimeout(() => {
+                        const erroTimeout = new Error('Tempo limite excedido ao enviar o código de ativação.');
+                        erroTimeout.code = 'ETIMEDOUT';
+                        reject(erroTimeout);
+                    }, 12000);
+                })
+            ]).finally(() => clearTimeout(timeoutEnvio));
+            console.log(`📩 E-mail de ativação aceito pelo SMTP para ${emailSanitizado}.`, resultadoEmail.messageId);
         } catch (mailErr) {
-            console.error(`⚠️ Falha ao enviar e-mail para ${emailSanitizado}:`, mailErr.message);
+            console.error(`⚠️ Falha ao enviar e-mail de ativação para ${emailSanitizado}:`, mailErr.message, mailErr.response || '');
+            return res.status(503).json({
+                success: false,
+                pendingActivation: true,
+                emailSent: false,
+                email: emailSanitizado,
+                nome: nome.trim(),
+                error: 'Sua conta foi salva como pendente, mas o código não pôde ser enviado agora. Use Reenviar Código para tentar novamente.'
+            });
         }
 
-        res.status(201).json({ success: true, message: 'Usuário cadastrado com sucesso. Verifique seu e-mail.' });
+        res.status(201).json({
+            success: true,
+            emailSent: true,
+            email: emailSanitizado,
+            nome: nome.trim(),
+            message: 'Usuário cadastrado como pendente. Informe o código enviado ao seu e-mail para ativar a conta.'
+        });
 
     } catch (err) {
         if (err.code === 11000) return res.status(400).json({ error: 'Identificador único duplicado no banco de dados.' });
@@ -690,7 +722,7 @@ app.post('/api/verificar-codigo', async (req, res) => {
     try {
         const { email, codigo } = req.body;
 
-        if (!email || !codigo) {
+        if (!email || typeof codigo !== 'string' || !/^\d{6}$/.test(codigo.trim())) {
             return res.status(400).json({ error: 'E-mail e código são obrigatórios.' });
         }
 
@@ -713,7 +745,7 @@ app.post('/api/verificar-codigo', async (req, res) => {
         }
 
         // Verifica a expiração
-        if (usuario.tokenExpiracao && new Date() > usuario.tokenExpiracao) {
+        if (!usuario.tokenExpiracao || new Date() > usuario.tokenExpiracao) {
             return res.status(400).json({ error: 'Este código expirou. Por favor, solicite um novo código.' });
         }
 
@@ -750,8 +782,23 @@ app.post('/api/reenviar-codigo', cadastroLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Esta conta já está verificada. Você já pode fazer login.' });
         }
 
+        const smtpConfigurado = Boolean(
+            process.env.SMTP_HOST &&
+            Number(process.env.SMTP_PORT) > 0 &&
+            process.env.SMTP_USER &&
+            process.env.SMTP_PASS &&
+            process.env.SMTP_FROM
+        );
+        if (!smtpConfigurado) {
+            console.error('Reenvio de ativação indisponível: configuração SMTP incompleta no ambiente do servidor.');
+            return res.status(503).json({
+                error: 'O serviço de e-mail está temporariamente indisponível. Tente novamente mais tarde.',
+                errorCode: 'SMTP_CONFIG_MISSING'
+            });
+        }
+
         // Gera novo código
-        const novoCodigo = Math.floor(100000 + Math.random() * 900000).toString();
+        const novoCodigo = crypto.randomInt(100000, 1000000).toString();
         
         // Define a expiração para 15 minutos a partir de agora
         const dataExpiracao = new Date();
@@ -761,29 +808,50 @@ app.post('/api/reenviar-codigo', cadastroLimiter, async (req, res) => {
         usuario.tokenExpiracao = dataExpiracao;
         await usuario.save();
 
+        let timeoutEnvio;
         try {
-            await transporter.sendMail({
-                from: process.env.SMTP_FROM || `"PEÇA BRUTA" <${process.env.SMTP_USER}>`,
+            const nomeSeguroEmail = escaparHTMLDeEmail(usuario.nome.trim());
+            const textoEmail = `Obrigado por se registar! O seu código de verificação é: ${novoCodigo}. Introduza este código para ativar a sua conta.`;
+            const mailOptions = {
+                from: process.env.SMTP_FROM,
+                replyTo: process.env.SMTP_USER,
                 to: emailSanitizado,
-                subject: 'Novo Código de Ativação - PEÇA BRUTA',
-                html: `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
-                          <h2 style="color: #ff4d00; text-align: center; font-family: 'Arial Black', sans-serif;">PEÇA BRUTA</h2>
-                          <p>Olá, <strong>${usuario.nome.trim()}</strong>!</p>
-                          <p>Você solicitou um novo código de ativação para a sua conta.</p>
-                          <p>Use o código de segurança de 6 dígitos abaixo para confirmar seu e-mail. Este código é válido por <strong>15 minutos</strong>.</p>
-                          
-                          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px; margin: 30px 0;">
-                              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #333;">${novoCodigo}</span>
-                          </div>
-                          
-                          <p style="font-size: 14px;">Por favor, digite este código na tela de confirmação do site.</p>
-                          <p style="font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">Se você não solicitou este código, pode ignorar este e-mail.</p>
-                       </div>`
-            });
-            console.log(`📩 NOVO Código de verificação reenviado com sucesso para ${emailSanitizado}`);
+                subject: 'Código de Ativação - Peça Bruta 🔐',
+                text: textoEmail,
+                html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+                    <p>Olá, <strong>${nomeSeguroEmail}</strong>.</p>
+                    <p>Obrigado por se registar! O seu código de verificação é:</p>
+                    <p style="font-size: 28px; font-weight: bold; letter-spacing: 5px;">${novoCodigo}</p>
+                    <p>Introduza este código para ativar a sua conta. Ele é válido por 15 minutos.</p>
+                </div>`
+            };
+            const resultadoEmail = await Promise.race([
+                transporter.sendMail(mailOptions),
+                new Promise((_, reject) => {
+                    timeoutEnvio = setTimeout(() => {
+                        const erroTimeout = new Error('Tempo limite excedido ao reenviar o código de ativação.');
+                        erroTimeout.code = 'ETIMEDOUT';
+                        reject(erroTimeout);
+                    }, 12000);
+                })
+            ]);
+            console.log(`📩 Código de verificação reenviado para ${emailSanitizado}.`, resultadoEmail.messageId);
         } catch (mailErr) {
-            console.error(`⚠️ Falha ao reenviar código para ${emailSanitizado}:`, mailErr.message);
-            return res.status(500).json({ error: 'Falha técnica ao despachar o e-mail. Tente novamente mais tarde.' });
+            const errorCode = /^[A-Z0-9_-]{1,40}$/i.test(String(mailErr.code || ''))
+                ? String(mailErr.code).toUpperCase()
+                : 'SMTP_SEND_FAILED';
+            console.error('Falha ao reenviar código de ativação:', {
+                code: errorCode,
+                command: mailErr.command || undefined,
+                responseCode: Number(mailErr.responseCode) || undefined,
+                message: mailErr.message
+            });
+            return res.status(503).json({
+                error: `Falha no envio do e-mail (${errorCode}). Tente novamente mais tarde.`,
+                errorCode
+            });
+        } finally {
+            clearTimeout(timeoutEnvio);
         }
 
         res.json({ success: true, message: 'Código de ativação reenviado com sucesso. Verifique sua caixa de entrada.' });
@@ -1420,6 +1488,73 @@ app.post('/api/mensagens', async (req, res) => {
         res.status(201).json(novaMensagem);
     } catch (erro) {
         res.status(500).json({ erro: "Erro ao salvar mensagem." });
+    }
+});
+
+// Dispara o aviso por e-mail no clique em "Contatar Lojista", sem depender do envio da primeira mensagem.
+app.post('/api/pedidos/:id/contatar', verificarToken, async (req, res) => {
+    try {
+        const idCliente = String(req.user?.id || req.user?._id || '').trim().toLowerCase();
+        if (!mongoose.Types.ObjectId.isValid(idCliente)) {
+            return res.status(401).json({ error: 'Token inválido ou sem ID de cliente.' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(String(req.params.id || ''))) {
+            return res.status(400).json({ error: 'Identificador de pedido inválido.' });
+        }
+
+        const pedido = await Pedido.findById(req.params.id).select('idCliente idLoja lojaDona idProduto nomeProduto').lean();
+        if (!pedido) return res.status(404).json({ error: 'Pedido não encontrado.' });
+        if (String(pedido.idCliente || '').trim().toLowerCase() !== idCliente) {
+            return res.status(403).json({ error: 'Este pedido não pertence ao cliente autenticado.' });
+        }
+
+        const produto = pedido.idProduto && mongoose.Types.ObjectId.isValid(String(pedido.idProduto))
+            ? await Produto.findById(String(pedido.idProduto)).select('idLoja nomeLoja titulo').lean()
+            : null;
+        const idsPossiveis = [pedido.idLoja, pedido.lojaDona, produto?.idLoja]
+            .map((id) => String(id || '').trim())
+            .filter((id) => mongoose.Types.ObjectId.isValid(id));
+        let loja = idsPossiveis.length
+            ? await Usuario.findOne({ _id: { $in: idsPossiveis }, tipo: 'loja' }).select('nome email').lean()
+            : null;
+
+        if (!loja) {
+            const nomesPossiveis = [...new Set([pedido.lojaDona, produto?.nomeLoja]
+                .map((nome) => String(nome || '').trim()).filter(Boolean))];
+            for (const nome of nomesPossiveis) {
+                loja = await Usuario.findOne({ tipo: 'loja', nome })
+                    .collation({ locale: 'pt', strength: 1 })
+                    .select('nome email')
+                    .lean();
+                if (loja) break;
+            }
+        }
+        if (!loja?.email) return res.status(404).json({ error: 'Não foi possível localizar o e-mail do lojista deste pedido.' });
+
+        const numeroPedido = String(pedido._id).toUpperCase();
+        const nomeProduto = String(pedido.nomeProduto || produto?.titulo || 'produto').trim();
+        const textoEmail = `Olá! Um cliente acabou de solicitar contato no painel da Peça Bruta referente ao pedido #${numeroPedido} (Produto: ${nomeProduto}). Acesse suas mensagens na plataforma agora mesmo para garantir um atendimento rápido ao motorista!`;
+        const urlMensagens = 'https://pecabruta.com.br/mensagens.html';
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            replyTo: process.env.SMTP_USER,
+            to: loja.email,
+            subject: 'Novo contato de cliente - Peça Bruta 💬',
+            text: `${textoEmail}\n\nAcesse: ${urlMensagens}`,
+            html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+                <p>${escaparHTMLDeEmail(textoEmail)}</p>
+                <p><a href="${urlMensagens}" style="color: #d94b12;">Acessar mensagens</a></p>
+            </div>`
+        };
+
+        void transporter.sendMail(mailOptions)
+            .then((resultado) => console.log(`📩 Aviso de contato de pedido ${numeroPedido} aceito pelo SMTP para ${loja.email}.`, resultado.messageId))
+            .catch((erroEmail) => console.error(`Falha no aviso do pedido ${numeroPedido}:`, erroEmail.message, erroEmail.response || ''));
+
+        return res.status(202).json({ success: true, message: 'Aviso de contato iniciado.' });
+    } catch (erro) {
+        console.error('Erro ao iniciar contato com lojista:', erro.message);
+        return res.status(500).json({ error: 'Não foi possível iniciar o contato com o lojista.' });
     }
 });
 

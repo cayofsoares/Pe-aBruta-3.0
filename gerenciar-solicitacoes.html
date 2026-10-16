@@ -310,9 +310,7 @@
         // 1. CONFIGURAÇÕES GERAIS E CONEXÃO
         // Centraliza a URL para evitar erros de CORS (Altere caso seu backend rode em outro host/porta)
         // ==========================================
-        const API_BASE_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
-            ? 'http://localhost:3000/api'
-            : 'https://api.pecabruta.com.br/api';
+        const API_BASE_URL = 'https://pe-abruta-3-0.onrender.com/api';
 
         // ==========================================
         // 2. SEGURANÇA E AUTENTICAÇÃO

@@ -1,4 +1,4 @@
-const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname) ? 'http://localhost:3000/api' : 'https://api.pecabruta.com.br/api';
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
@@ -143,24 +143,42 @@ function apiFetch(url, options = {}) {
                 turnstileToken: turnstileResponse
             };
 
+            const controllerRegistro = new AbortController();
+            const timeoutRegistro = setTimeout(() => controllerRegistro.abort(), 25000);
+
             try {
                 const response = await apiFetch(`${API_URL}/registrar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     mode: 'cors',
+                    signal: controllerRegistro.signal,
                     body: JSON.stringify(dados)
                 });
 
-                if (response.status === 201) {
-                    emailCadastradoGlobal = dados.email;
-                    sessionStorage.setItem('emailVerificacao', dados.email);
-                    sessionStorage.setItem('usuarioNome', dados.nome);
-                    sessionStorage.setItem('usuarioEmail', dados.email); // Armazena o email
-                    document.getElementById('emailCadastradoDisplay').innerText = dados.email; // Mostra no modal
+                const dadosResposta = await response.json().catch(() => ({}));
+
+                const ativacaoPendente = dadosResposta.pendingActivation === true;
+                if ((response.status === 201 && dadosResposta.success) || (ativacaoPendente && dadosResposta.email)) {
+                    const emailParaAtivacao = dadosResposta.email || emailInput;
+                    const nomeParaAtivacao = dadosResposta.nome || nomeInput;
+                    emailCadastradoGlobal = emailParaAtivacao;
+                    sessionStorage.setItem('emailVerificacao', emailParaAtivacao);
+                    sessionStorage.setItem('usuarioNome', nomeParaAtivacao);
+                    sessionStorage.setItem('usuarioEmail', emailParaAtivacao);
+                    document.getElementById('emailCadastradoDisplay').innerText = emailParaAtivacao;
+                    const textoAtivacao = document.getElementById('textoAtivacao');
+                    if (textoAtivacao) {
+                        textoAtivacao.innerText = ativacaoPendente && dadosResposta.emailSent === false
+                            ? 'Sua conta foi salva como pendente, mas não conseguimos enviar o código agora. Clique em “Reenviar Código” para tentar novamente.'
+                            : ativacaoPendente
+                                ? 'Seu cadastro já está salvo e aguarda ativação. Digite o código recebido ou clique em “Reenviar Código”.'
+                            : 'Enviamos um código de segurança de 6 dígitos para o e-mail:';
+                    }
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = textoOriginalBtn;
                     document.getElementById('modalSucesso').style.display = 'flex'; // Mostra o modal de código
                 } else {
-                    const errorData = await response.json();
-                    alert('Erro: ' + errorData.error);
+                    alert('Erro: ' + (dadosResposta.error || 'Não foi possível concluir o cadastro.'));
                     
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = textoOriginalBtn;
@@ -169,10 +187,29 @@ function apiFetch(url, options = {}) {
                 }
             } catch (err) {
                 console.error(err);
-                alert('ERRO DE CONEXÃO: Verifique sua internet ou contate o suporte.');
+                if (err.name === 'AbortError') {
+                    // O navegador desistiu de aguardar, mas o servidor pode já ter salvo a conta
+                    // e enviado (ou ainda estar enviando) o código. Leva o usuário à etapa de ativação.
+                    emailCadastradoGlobal = emailInput;
+                    sessionStorage.setItem('emailVerificacao', emailInput);
+                    sessionStorage.setItem('usuarioNome', nomeInput);
+                    sessionStorage.setItem('usuarioEmail', emailInput);
+                    document.getElementById('emailCadastradoDisplay').innerText = emailInput;
+                    const textoAtivacao = document.getElementById('textoAtivacao');
+                    if (textoAtivacao) {
+                        textoAtivacao.innerText = 'O servidor demorou para confirmar. Sua conta pode estar pendente; informe o código se ele chegar ou clique em “Reenviar Código”.';
+                    }
+                    document.getElementById('modalSucesso').style.display = 'flex';
+                } else {
+                    alert('ERRO DE CONEXÃO: Verifique sua internet ou contate o suporte.');
+                }
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = textoOriginalBtn;
                 if(window.turnstile) turnstile.reset();
+            } finally {
+                clearTimeout(timeoutRegistro);
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = textoOriginalBtn;
             }
         };
 
@@ -241,6 +278,7 @@ function apiFetch(url, options = {}) {
                 
                 if (response.ok) {
                     alert(data.message || "Conta ativada com sucesso! Você será redirecionado para o Login.");
+                    sessionStorage.removeItem('emailVerificacao');
                     window.location.href = "login.html";
                 } else {
                     alert(data.error || 'Código inválido ou expirado. Verifique o código e tente novamente.');
@@ -275,3 +313,11 @@ function apiFetch(url, options = {}) {
             else if (value.length > 3) value = value.replace(/(\d{3})(\d{1,3})/, "$1.$2");
             e.target.value = value;
         });
+
+        // Restaura a etapa de ativação se o cliente recarregar a página durante o cadastro.
+        const emailPendenteAtivacao = sessionStorage.getItem('emailVerificacao');
+        if (emailPendenteAtivacao && emailPendenteAtivacao !== 'undefined') {
+            emailCadastradoGlobal = emailPendenteAtivacao;
+            document.getElementById('emailCadastradoDisplay').innerText = emailPendenteAtivacao;
+            document.getElementById('modalSucesso').style.display = 'flex';
+        }

@@ -1,6 +1,4 @@
-const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
-    ? `http://${window.location.hostname}:3000/api`
-    : 'https://api.pecabruta.com.br/api';
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),

@@ -1,4 +1,4 @@
-const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname) ? 'http://localhost:3000/api' : 'https://api.pecabruta.com.br/api';
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
@@ -107,14 +107,19 @@ window.onload = async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const idLojistaDaUrl = urlParams.get('lojista');
     const lojaDaUrl = (idLojistaDaUrl && parceirosPorId.get(idLojistaDaUrl.toLowerCase())) || urlParams.get('loja');
-    const nomeProdutoDaUrl = urlParams.get('ref');
+    const nomeProdutoDaUrl = urlParams.get('produto') || urlParams.get('ref');
+    const pedidoIdDaUrl = urlParams.get('pedidoId');
     const mensagemInicial = urlParams.has('msg')
         ? (urlParams.get('msg') || '')
-        : (nomeProdutoDaUrl ? `Olá! Tenho interesse no produto: ${nomeProdutoDaUrl}` : '');
+        : (pedidoIdDaUrl
+            ? (nomeProdutoDaUrl
+                ? `Olá! Gostaria de falar sobre o pedido #${pedidoIdDaUrl} referente ao produto ${nomeProdutoDaUrl}.`
+                : `Olá! Gostaria de falar sobre o pedido #${pedidoIdDaUrl}.`)
+            : (nomeProdutoDaUrl ? `Olá! Tenho interesse no produto: ${nomeProdutoDaUrl}` : ''));
     if (lojaDaUrl) {
         await abrirChat(lojaDaUrl);
     }
-    if (urlParams.has('msg') || nomeProdutoDaUrl) {
+    if (urlParams.has('msg') || nomeProdutoDaUrl || pedidoIdDaUrl) {
         const campoMensagem = document.getElementById('inputMensagem');
         campoMensagem.value = mensagemInicial || '';
         campoMensagem.focus();

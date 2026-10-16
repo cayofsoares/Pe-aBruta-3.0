@@ -1,6 +1,4 @@
-const API_URL = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
-    ? 'http://localhost:3000/api'
-    : 'https://api.pecabruta.com.br/api';
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 
 function apiFetch(url, options = {}) {
     return fetch(url, {
@@ -127,7 +125,10 @@ function renderizarPedido(pedido) {
 
     const botoesCompra = ehCompra ? `
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="button" onclick="window.location.href='mensagens.html?loja=${encodeURIComponent(pedido.lojaDona || '')}'"
+            <button type="button" class="btn-contatar-lojista"
+                data-order-id="${escaparHTML(pedido._id)}"
+                data-store-name="${escaparHTML(pedido.lojaDona || '')}"
+                data-product-name="${escaparHTML(pedido.nomeProduto || '')}"
                 style="background:transparent;border:1px solid #ff4d00;color:#ff6a2a;padding:8px 12px;border-radius:5px;cursor:pointer;">
                 <i class="fas fa-comment"></i> Contatar Lojista
             </button>
@@ -155,7 +156,7 @@ function renderizarPedido(pedido) {
                     ${badgeQuantidade}
                     <strong style="display:block;color:#fff;margin-top:${badgeQuantidade ? '8px' : '0'};">${escaparHTML(formatarValor(valorTotalPedido))}</strong>
                     <p style="margin:7px 0 0;color:#c7a77a;font-size:12px;line-height:1.4;">
-                        <i class="fas fa-clock" aria-hidden="true"></i> Previsão de Entrega: 10, 15 e 20 dias máximos (dependendo da região e disponibilidade do produto)   
+                        <i class="fas fa-clock" aria-hidden="true"></i> 🚨 Previsão de entrega: O tempo de chegada varia conforme a distância do lojista até o local do seu veículo. Para alinhar o tempo exato e passar mais detalhes do problema, clique no botão Contatar Lojista.   
                     </p>
                 </div>
             </div>
@@ -236,6 +237,34 @@ listaPedidosElement.addEventListener('change', async (evento) => {
 });
 
 listaPedidosElement.addEventListener('click', async (evento) => {
+    const botaoContato = evento.target.closest('.btn-contatar-lojista');
+    if (botaoContato) {
+        botaoContato.disabled = true;
+        const textoOriginal = botaoContato.innerHTML;
+        botaoContato.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Abrindo conversa…';
+
+        try {
+            const resposta = await apiFetch(`${API_URL}/pedidos/${encodeURIComponent(botaoContato.dataset.orderId)}/contatar`, {
+                method: 'POST',
+                headers: apiHeaders({ 'Authorization': `Bearer ${tokenSessao}` })
+            });
+            const dados = await resposta.json().catch(() => ({}));
+            if (!resposta.ok) throw new Error(dados.error || 'Não foi possível notificar o lojista.');
+        } catch (erro) {
+            console.error('Falha ao iniciar contato com o lojista:', erro);
+        } finally {
+            const parametros = new URLSearchParams({
+                loja: botaoContato.dataset.storeName || '',
+                pedidoId: botaoContato.dataset.orderId || '',
+                produto: botaoContato.dataset.productName || ''
+            });
+            window.location.href = `mensagens.html?${parametros.toString()}`;
+            botaoContato.disabled = false;
+            botaoContato.innerHTML = textoOriginal;
+        }
+        return;
+    }
+
     const botao = evento.target.closest('.btn-confirmar-recebimento');
     if (!botao) return;
     botao.disabled = true;

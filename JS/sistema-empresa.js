@@ -1,33 +1,7 @@
 // ==========================================
 // CONFIGURAÇÕES GERAIS E ESTADO
 // ==========================================
-const API_URL = (() => {
-    const hostname = window.location.hostname;
-    // Em teste local, sempre consulta o Node local, mesmo que a sessão tenha
-    // guardado uma URL antiga do DevTunnel.
-    if (['127.0.0.1', 'localhost'].includes(hostname)) {
-        return `http://${hostname}:3000/api`;
-    }
-
-    // Em produção, mantém o backend que emitiu o JWT quando ele é permitido.
-    const apiBaseUrlSalva = sessionStorage.getItem('apiBaseUrl');
-    if (apiBaseUrlSalva) {
-        try {
-            const apiSalva = new URL(apiBaseUrlSalva);
-            const caminhoApiValido = apiSalva.pathname.replace(/\/+$/, '') === '/api';
-            const apiLocalValida = apiSalva.protocol === 'http:' &&
-                ['localhost', '127.0.0.1'].includes(apiSalva.hostname) && apiSalva.port === '3000';
-            const apiRenderValida = apiSalva.origin === 'https://api.pecabruta.com.br';
-            if (caminhoApiValido && (apiLocalValida || apiRenderValida)) {
-                return `${apiSalva.origin}/api`;
-            }
-        } catch (erro) {
-            console.warn('Endereço de API da sessão inválido; usando o ambiente atual.');
-        }
-    }
-
-    return 'https://api.pecabruta.com.br/api';
-})();
+const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
 
 function apiFetch(url, options = {}) {
     const headers = {
