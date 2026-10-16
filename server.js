@@ -52,34 +52,9 @@ const transporter = nodemailer.createTransport({
 // --- 🛡️ MIDDLEWARES DE SEGURANÇA (OWASP) ---
 app.use(helmet());
 
-const corsAllowedOrigins = new Set([
-    'https://pecabruta.com.br',
-    'https://www.pecabruta.com.br',
-    'https://dancing-mermaid-ca2ef7.netlify.app',
-    ...(process.env.CORS_ALLOWED_ORIGINS || '')
-        .split(',')
-        .map(origin => origin.trim())
-        .filter(Boolean)
-]);
-
 app.use(cors({
-    origin: (origin, callback) => {
-        // Chamadas sem Origin (ex.: health checks e ferramentas server-to-server)
-        // não são acessos de navegador e não precisam de cabeçalho CORS.
-        if (!origin) return callback(null, true);
-
-        let isLocalhost = false;
-        try {
-            const parsedOrigin = new URL(origin);
-            isLocalhost = parsedOrigin.protocol === 'http:' &&
-                ['localhost', '127.0.0.1', '[::1]'].includes(parsedOrigin.hostname);
-        } catch (erro) {
-            // Origem malformada não é liberada.
-        }
-
-        return callback(null, isLocalhost || corsAllowedOrigins.has(origin));
-    },
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: '*', // Permite que o Netlify comunique com o servidor
+    allowedHeaders: ['Content-Type', 'Authorization', 'bypass-tunnel-reminder', 'ngrok-skip-browser-warning']
 }));
 
 app.use(express.json({ limit: '50mb' }));
