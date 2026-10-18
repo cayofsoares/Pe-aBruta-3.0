@@ -115,6 +115,12 @@ function apiFetch(url, options = {}) {
                 return;
             }
 
+            const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value?.trim();
+            if (!turnstileToken) {
+                alert('Conclua a validação de segurança para continuar.');
+                return;
+            }
+
             // Proteção contra múltiplos envios (Race Condition UI)
             const btnSubmit = document.getElementById('btnSubmitRegistro');
             const textoOriginalBtn = btnSubmit.innerText;
@@ -131,7 +137,8 @@ function apiFetch(url, options = {}) {
                 cpf: cpfLimpo, 
                 telefone: telefoneLimpo, 
                 tipo: "cliente",
-                aceitouTermos: aceiteTermos
+                aceitouTermos: aceiteTermos,
+                turnstileToken
             };
 
             const controllerRegistro = new AbortController();
@@ -170,7 +177,7 @@ function apiFetch(url, options = {}) {
                     document.getElementById('modalSucesso').style.display = 'flex'; // Mostra o modal de código
                 } else {
                     alert('Erro: ' + (dadosResposta.error || 'Não foi possível concluir o cadastro.'));
-                    
+                    window.turnstile?.reset();
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = textoOriginalBtn;
                 }
@@ -191,6 +198,7 @@ function apiFetch(url, options = {}) {
                     document.getElementById('modalSucesso').style.display = 'flex';
                 } else {
                     alert('ERRO DE CONEXÃO: Verifique sua internet ou contate o suporte.');
+                    window.turnstile?.reset();
                 }
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = textoOriginalBtn;

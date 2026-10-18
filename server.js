@@ -547,22 +547,48 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
             return res.status(400).json({ error: 'Preencha todos os campos corretamente.' });
         }
 
-        // MELHORIA: Validação do Cloudflare Turnstile (Anti-bot) no Backend
-        if (process.env.TURNSTILE_SECRET_KEY && turnstileToken) {
-            const formData = new URLSearchParams();
-            formData.append('secret', process.env.TURNSTILE_SECRET_KEY);
-            formData.append('response', turnstileToken);
-            formData.append('remoteip', req.ip);
+        // Turnstile é obrigatório no cadastro; a chave secreta permanece apenas no ambiente do servidor.
+        const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+        if (!turnstileSecret) {
+            console.error('TURNSTILE_SECRET_KEY não está configurada no ambiente do servidor.');
+            return res.status(503).json({ error: 'A validação de segurança está temporariamente indisponível. Tente novamente mais tarde.' });
+        }
+        if (typeof turnstileToken !== 'string' || !turnstileToken.trim()) {
+            return res.status(400).json({ error: 'Conclua a validação de segurança para continuar.' });
+        }
 
-            const turnstileFetch = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-                method: 'POST',
-                body: formData
-            });
+        try {
+            const formData = new URLSearchParams();
+            formData.append('secret', turnstileSecret);
+            formData.append('response', turnstileToken.trim());
+            const remoteIp = req.ip || req.socket?.remoteAddress;
+            if (remoteIp) formData.append('remoteip', remoteIp);
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            let turnstileFetch;
+            try {
+                turnstileFetch = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+            } finally {
+                clearTimeout(timeout);
+            }
+            if (!turnstileFetch.ok) {
+                console.error(`Cloudflare Turnstile Siteverify respondeu com HTTP ${turnstileFetch.status}.`);
+                return res.status(503).json({ error: 'Não foi possível validar a segurança agora. Tente novamente.' });
+            }
             const turnstileResult = await turnstileFetch.json();
             
-            if (!turnstileResult.success) {
+            if (turnstileResult.success !== true) {
+                console.warn('Validação Turnstile rejeitada:', turnstileResult['error-codes'] || []);
                 return res.status(403).json({ error: 'Validação de segurança anti-bot falhou. Tente novamente.' });
             }
+        } catch (turnstileError) {
+            console.error('Falha ao consultar Cloudflare Turnstile:', turnstileError.name || 'erro');
+            return res.status(503).json({ error: 'Não foi possível validar a segurança agora. Tente novamente.' });
         }
 
         // MELHORIA: Bloqueio caso Termos não tenham sido aceitos
