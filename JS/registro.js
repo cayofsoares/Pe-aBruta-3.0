@@ -77,9 +77,6 @@ function apiFetch(url, options = {}) {
             const confirma = document.getElementById('confirmaSenha').value;
             const aceiteTermos = document.getElementById('aceiteTermos').checked;
             
-            // Captura do Token Turnstile
-            const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
-
             // Validações de Consistência
             if (nomeInput.split(' ').length < 2) {
                 alert('Por favor, informe seu nome e sobrenome reais.');
@@ -118,11 +115,6 @@ function apiFetch(url, options = {}) {
                 return;
             }
 
-            if (!turnstileResponse) {
-                alert('Por favor, confirme que você é humano aguardando a validação de segurança.');
-                return;
-            }
-
             // Proteção contra múltiplos envios (Race Condition UI)
             const btnSubmit = document.getElementById('btnSubmitRegistro');
             const textoOriginalBtn = btnSubmit.innerText;
@@ -139,8 +131,7 @@ function apiFetch(url, options = {}) {
                 cpf: cpfLimpo, 
                 telefone: telefoneLimpo, 
                 tipo: "cliente",
-                aceitouTermos: aceiteTermos,
-                turnstileToken: turnstileResponse
+                aceitouTermos: aceiteTermos
             };
 
             const controllerRegistro = new AbortController();
@@ -182,8 +173,6 @@ function apiFetch(url, options = {}) {
                     
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = textoOriginalBtn;
-                    // Reset do Turnstile em caso de falha de validação backend
-                    if(window.turnstile) turnstile.reset();
                 }
             } catch (err) {
                 console.error(err);
@@ -205,7 +194,6 @@ function apiFetch(url, options = {}) {
                 }
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = textoOriginalBtn;
-                if(window.turnstile) turnstile.reset();
             } finally {
                 clearTimeout(timeoutRegistro);
                 btnSubmit.disabled = false;
