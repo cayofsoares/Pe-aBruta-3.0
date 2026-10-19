@@ -626,6 +626,35 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
             return res.status(400).json({ error: 'Você precisa aceitar os Termos de Uso e Política de Privacidade.' });
         }
 
+        const smtpConfigurado = Boolean(
+            process.env.SMTP_HOST &&
+            Number(process.env.SMTP_PORT) > 0 &&
+            process.env.SMTP_USER &&
+            process.env.SMTP_PASS &&
+            process.env.SMTP_FROM
+        );
+        if (!smtpConfigurado) {
+            console.error('Cadastro indisponível: configuração SMTP incompleta no ambiente do servidor.');
+            return res.status(503).json({
+                error: 'O serviço de envio do código está temporariamente indisponível. Tente novamente mais tarde.',
+                errorCode: 'SMTP_CONFIG_MISSING'
+            });
+        }
+
+        try {
+            await transporter.verify();
+        } catch (smtpError) {
+            console.error('Cadastro indisponível: verificação da conexão SMTP falhou:', {
+                code: smtpError.code || 'SMTP_VERIFY_FAILED',
+                responseCode: Number(smtpError.responseCode) || undefined,
+                message: smtpError.message
+            });
+            return res.status(503).json({
+                error: 'Não foi possível conectar ao serviço de e-mail. Nenhuma conta foi criada; tente novamente mais tarde.',
+                errorCode: 'SMTP_UNAVAILABLE'
+            });
+        }
+
         const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
         if (!senhaRegex.test(senha)) {
             return res.status(400).json({ error: 'A senha deve conter no mínimo 8 caracteres, incluindo letras e números.' });
