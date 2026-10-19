@@ -49,7 +49,7 @@ function apiFetch(url, options = {}) {
         }
 
         function validarEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const re = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{3,}|(?:com|net|org|edu|gov|co)\.[a-z]{2})$/i;
             return re.test(String(email).toLowerCase());
         }
 
@@ -84,7 +84,7 @@ function apiFetch(url, options = {}) {
             }
 
             if (!validarEmail(emailInput)) {
-                alert('O e-mail informado não possui um formato válido.');
+                alert('Digite um e-mail válido com um domínio comum, como .com ou .com.br.');
                 return;
             }
 
@@ -156,7 +156,7 @@ function apiFetch(url, options = {}) {
                 const dadosResposta = await response.json().catch(() => ({}));
 
                 const ativacaoPendente = dadosResposta.pendingActivation === true;
-                if ((response.status === 201 && dadosResposta.success) || (ativacaoPendente && dadosResposta.email)) {
+                if ((response.ok && dadosResposta.success === true) || (ativacaoPendente && dadosResposta.email)) {
                     const emailParaAtivacao = dadosResposta.email || emailInput;
                     const nomeParaAtivacao = dadosResposta.nome || nomeInput;
                     emailCadastradoGlobal = emailParaAtivacao;
@@ -172,14 +172,10 @@ function apiFetch(url, options = {}) {
                                 ? 'Seu cadastro já está salvo e aguarda ativação. Digite o código recebido ou clique em “Reenviar Código”.'
                             : 'Enviamos um código de segurança de 6 dígitos para o e-mail:';
                     }
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = textoOriginalBtn;
                     document.getElementById('modalSucesso').style.display = 'flex'; // Mostra o modal de código
                 } else {
                     alert('Erro: ' + (dadosResposta.error || 'Não foi possível concluir o cadastro.'));
                     window.turnstile?.reset();
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = textoOriginalBtn;
                 }
             } catch (err) {
                 console.error(err);

@@ -539,6 +539,36 @@ const exigirPermissao = (tiposPermitidos) => {
 // --- ROTAS DA API ---
 
 // A. ROTAS DE CADASTRO ADICIONADAS E BLINDADAS
+async function enviarCodigoAtivacao(email, nome, codigo) {
+    const nomeSeguroEmail = escaparHTMLDeEmail(nome);
+    const textoEmail = `Obrigado por se registar! O seu código de verificação é: ${codigo}. Introduza este código para ativar a sua conta.`;
+    const mailOptions = {
+        from: process.env.SMTP_FROM,
+        replyTo: process.env.SMTP_USER,
+        to: email,
+        subject: 'Código de Ativação - Peça Bruta 🔐',
+        text: textoEmail,
+        html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+            <p>Olá, <strong>${nomeSeguroEmail}</strong>.</p>
+            <p>Obrigado por se registar! O seu código de verificação é:</p>
+            <p style="font-size: 28px; font-weight: bold; letter-spacing: 5px;">${codigo}</p>
+            <p>Introduza este código para ativar a sua conta. Ele é válido por 15 minutos.</p>
+        </div>`
+    };
+
+    let timeoutEnvio;
+    return Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => {
+            timeoutEnvio = setTimeout(() => {
+                const erroTimeout = new Error('Tempo limite excedido ao enviar o código de ativação.');
+                erroTimeout.code = 'ETIMEDOUT';
+                reject(erroTimeout);
+            }, 12000);
+        })
+    ]).finally(() => clearTimeout(timeoutEnvio));
+}
+
 app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) => {
     try {
         const { nome, email, senha, cpf, telefone, aceitouTermos, turnstileToken } = req.body;
@@ -615,12 +645,39 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
             // Exige o CPF já vinculado à conta e não cria um segundo usuário.
             const cpfExistenteDoUsuario = String(usuarioExistente.cpf || '').replace(/\D/g, '');
             if (!usuarioExistente.emailVerificado && cpfExistenteDoUsuario === cpfSanitizado) {
+                const codigoVerificacao = crypto.randomInt(100000, 1000000).toString();
+                const dataExpiracao = new Date();
+                dataExpiracao.setMinutes(dataExpiracao.getMinutes() + 15);
+                usuarioExistente.tokenVerificacao = codigoVerificacao;
+                usuarioExistente.tokenExpiracao = dataExpiracao;
+                await usuarioExistente.save();
+
+                try {
+                    const resultadoEmail = await enviarCodigoAtivacao(
+                        usuarioExistente.email,
+                        usuarioExistente.nome,
+                        codigoVerificacao
+                    );
+                    console.log(`📩 Novo código de ativação aceito pelo SMTP para ${usuarioExistente.email}.`, resultadoEmail.messageId);
+                } catch (mailErr) {
+                    console.error(`⚠️ Falha ao reenviar e-mail de ativação para ${usuarioExistente.email}:`, mailErr.message, mailErr.response || '');
+                    return res.status(503).json({
+                        success: false,
+                        pendingActivation: true,
+                        emailSent: false,
+                        email: usuarioExistente.email,
+                        nome: usuarioExistente.nome,
+                        error: 'Sua conta continua pendente, mas o código não pôde ser enviado agora. Tente novamente mais tarde.'
+                    });
+                }
+
                 return res.status(201).json({
                     success: true,
                     pendingActivation: true,
+                    emailSent: true,
                     email: usuarioExistente.email,
                     nome: usuarioExistente.nome,
-                    message: 'Seu cadastro ainda precisa de ativação. Informe o código enviado ou solicite um novo código.'
+                    message: 'Um novo código de ativação foi enviado. Informe-o para concluir o cadastro.'
                 });
             }
             return res.status(400).json({ error: 'Este e-mail já está cadastrado no sistema.' });
@@ -662,34 +719,8 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
 
         await novoUsuario.save();
 
-        // Só confirma o cadastro depois que o servidor SMTP aceitar o envio do código.
         try {
-            const nomeSeguroEmail = escaparHTMLDeEmail(nome.trim());
-            const textoEmail = `Obrigado por se registar! O seu código de verificação é: ${codigoVerificacao}. Introduza este código para ativar a sua conta.`;
-            const mailOptions = {
-                from: process.env.SMTP_FROM,
-                replyTo: process.env.SMTP_USER,
-                to: emailSanitizado,
-                subject: 'Código de Ativação - Peça Bruta 🔐',
-                text: textoEmail,
-                html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
-                    <p>Olá, <strong>${nomeSeguroEmail}</strong>.</p>
-                    <p>Obrigado por se registar! O seu código de verificação é:</p>
-                    <p style="font-size: 28px; font-weight: bold; letter-spacing: 5px;">${codigoVerificacao}</p>
-                    <p>Introduza este código para ativar a sua conta. Ele é válido por 15 minutos.</p>
-                </div>`
-            };
-            let timeoutEnvio;
-            const resultadoEmail = await Promise.race([
-                transporter.sendMail(mailOptions),
-                new Promise((_, reject) => {
-                    timeoutEnvio = setTimeout(() => {
-                        const erroTimeout = new Error('Tempo limite excedido ao enviar o código de ativação.');
-                        erroTimeout.code = 'ETIMEDOUT';
-                        reject(erroTimeout);
-                    }, 12000);
-                })
-            ]).finally(() => clearTimeout(timeoutEnvio));
+            const resultadoEmail = await enviarCodigoAtivacao(emailSanitizado, nome.trim(), codigoVerificacao);
             console.log(`📩 E-mail de ativação aceito pelo SMTP para ${emailSanitizado}.`, resultadoEmail.messageId);
         } catch (mailErr) {
             console.error(`⚠️ Falha ao enviar e-mail de ativação para ${emailSanitizado}:`, mailErr.message, mailErr.response || '');
