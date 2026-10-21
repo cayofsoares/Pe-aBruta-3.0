@@ -39,15 +39,13 @@ app.set('trust proxy', 1);
 // --- CONFIGURAÇÃO DE E-MAIL (NODEMAILER) CORRIGIDA ---
 // Agora respeita estritamente o .env e configura o SSL/TLS dinamicamente pela porta
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: Number(process.env.SMTP_PORT) === 465,
+    host: 'smtp-relay.brevo.com',
+    port: 2525,
+    secure: false,
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    logger: true, // NOVO: Mostra logs detalhados
-    debug: true   // NOVO: Mostra o que o Gmail está respondendo
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
 });
 // --- 🛡️ MIDDLEWARES DE SEGURANÇA (OWASP) ---
 app.use(helmet());
