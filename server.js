@@ -43,8 +43,8 @@ const transporter = nodemailer.createTransport({
     port: 2525,
     secure: false,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
     }
 });
 // --- 🛡️ MIDDLEWARES DE SEGURANÇA (OWASP) ---
@@ -642,11 +642,7 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
         try {
             await transporter.verify();
         } catch (smtpError) {
-            console.error('Cadastro indisponível: verificação da conexão SMTP falhou:', {
-                code: smtpError.code || 'SMTP_VERIFY_FAILED',
-                responseCode: Number(smtpError.responseCode) || undefined,
-                message: smtpError.message
-            });
+            console.error('[SMTP] Falha detalhada ao conectar/verificar antes do cadastro:', smtpError);
             return res.status(503).json({
                 error: 'Não foi possível conectar ao serviço de e-mail. Nenhuma conta foi criada; tente novamente mais tarde.',
                 errorCode: 'SMTP_UNAVAILABLE'
@@ -687,7 +683,7 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
                     );
                     console.log(`📩 Novo código de ativação aceito pelo SMTP para ${usuarioExistente.email}.`, resultadoEmail.messageId);
                 } catch (mailErr) {
-                    console.error(`⚠️ Falha ao reenviar e-mail de ativação para ${usuarioExistente.email}:`, mailErr.message, mailErr.response || '');
+                    console.error(`[SMTP] Falha detalhada ao reenviar ativação para ${usuarioExistente.email}:`, mailErr);
                     return res.status(503).json({
                         success: false,
                         pendingActivation: true,
@@ -750,7 +746,7 @@ app.post(['/api/registrar', '/api/registro'], cadastroLimiter, async (req, res) 
             const resultadoEmail = await enviarCodigoAtivacao(emailSanitizado, nome.trim(), codigoVerificacao);
             console.log(`📩 E-mail de ativação aceito pelo SMTP para ${emailSanitizado}.`, resultadoEmail.messageId);
         } catch (mailErr) {
-            console.error(`⚠️ Falha ao enviar e-mail de ativação para ${emailSanitizado}:`, mailErr.message, mailErr.response || '');
+            console.error(`[SMTP] Falha detalhada ao enviar ativação para ${emailSanitizado}:`, mailErr);
             return res.status(503).json({
                 success: false,
                 pendingActivation: true,
