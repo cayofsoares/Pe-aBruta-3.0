@@ -60,6 +60,18 @@ function apiFetch(url, options = {}) {
             return token || sessionStorage.getItem('usuario'); 
         }
 
+        function getTokenAutenticacao() {
+            const tokenDireto = sessionStorage.getItem('token');
+            if (tokenDireto) return tokenDireto;
+
+            try {
+                const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+                return usuario?.token || usuario?.user?.token || null;
+            } catch (erro) {
+                return null;
+            }
+        }
+
         // --- SISTEMA DE CARREGAMENTO SEGURO VIA API ---
         async function carregarProdutoSeguro() {
             try {
@@ -620,7 +632,7 @@ function apiFetch(url, options = {}) {
 
         // Redireciona a conversa para o chat real da plataforma.
         function abrirChatVendedor() {
-            const tokenLogado = getTokenSeguro();
+            const tokenLogado = getTokenAutenticacao();
             
             // Segurança: Se não estiver logado, proíbe a abertura do chat.
             if(!tokenLogado) {
@@ -638,6 +650,22 @@ function apiFetch(url, options = {}) {
             if (idLojista) parametros.set('lojista', String(idLojista));
             if (nomeLoja) parametros.set('loja', nomeLoja);
             parametros.set('ref', nomeProduto);
+
+            const idProduto = String(pecaAtual._id || pecaAtual.id || '').trim();
+            if (idProduto) {
+                apiFetch(`${API_URL}/produtos/${encodeURIComponent(idProduto)}/interesse-chat`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${tokenLogado}` },
+                    keepalive: true
+                }).then(async resposta => {
+                    if (!resposta.ok) {
+                        const erroApi = await resposta.json().catch(() => ({}));
+                        console.warn('Não foi possível iniciar o aviso de interesse ao lojista:', erroApi.error || resposta.status);
+                    }
+                }).catch(erro => {
+                    console.warn('Falha de conexão ao iniciar o aviso de interesse ao lojista:', erro.message);
+                });
+            }
 
             window.location.href = `mensagens.html?${parametros.toString()}`;
         }

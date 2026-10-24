@@ -1352,6 +1352,50 @@ app.get('/api/solicitacoes/abertas', verificarToken, exigirPermissao(['loja']), 
     }
 });
 
+// Avisa o cliente quando um lojista inicia contato pelo mural de solicitações.
+app.post('/api/solicitacoes/:id/contatar', verificarToken, exigirPermissao(['loja']), async (req, res) => {
+    try {
+        const loja = await buscarLojaDoMural(req.user);
+        if (!loja) return res.status(404).json({ error: 'Loja não encontrada para o usuário autenticado.' });
+        if (!mongoose.Types.ObjectId.isValid(String(req.params.id || ''))) {
+            return res.status(400).json({ error: 'Identificador de solicitação inválido.' });
+        }
+
+        const solicitacao = await SolicitacaoPeca.findById(req.params.id).select('cliente peca').lean();
+        if (!solicitacao) return res.status(404).json({ error: 'Solicitação não encontrada.' });
+
+        const cliente = await Usuario.findById(solicitacao.cliente).select('nome email').lean();
+        if (!cliente?.email) {
+            return res.status(404).json({ error: 'Não foi possível localizar o e-mail do cliente desta solicitação.' });
+        }
+
+        const nomeCliente = String(cliente.nome || 'Cliente').trim();
+        const nomePeca = String(solicitacao.peca || 'peça solicitada').replace(/[\r\n]+/g, ' ').trim().slice(0, 180);
+        const textoEmail = `Olá ${nomeCliente}! Um lojista na plataforma Peça Bruta tem o item que você solicitou (${nomePeca}) e acabou de iniciar um chat com você. Acesse sua Central de Negociações para responder e fechar negócio!`;
+        const linkMensagens = 'https://pecabruta.com.br/mensagens.html';
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            replyTo: process.env.SMTP_USER,
+            to: cliente.email,
+            subject: `Boas notícias! Um lojista encontrou sua peça: ${nomePeca}`,
+            text: `${textoEmail}\n\n${linkMensagens}`,
+            html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+                <p>Olá <strong>${escaparHTMLDeEmail(nomeCliente)}</strong>! Um lojista na plataforma Peça Bruta tem o item que você solicitou (<strong>${escaparHTMLDeEmail(nomePeca)}</strong>) e acabou de iniciar um chat com você.</p>
+                <p><a href="${linkMensagens}" style="color: #d94b12;">Acesse sua Central de Negociações para responder e fechar negócio!</a></p>
+            </div>`
+        };
+
+        void transporter.sendMail(mailOptions)
+            .then((resultado) => console.log(`📩 Aviso de lojista interessado na solicitação ${solicitacao._id} enviado ao cliente ${cliente.email}.`, resultado.messageId))
+            .catch((erroEmail) => console.error(`Falha ao notificar cliente sobre a solicitação ${solicitacao._id}:`, erroEmail.message, erroEmail.response || ''));
+
+        return res.status(202).json({ success: true, message: 'Aviso ao cliente iniciado.' });
+    } catch (erro) {
+        console.error('Erro ao iniciar contato pela solicitação:', erro);
+        return res.status(500).json({ error: 'Não foi possível iniciar o aviso ao cliente.' });
+    }
+});
+
 app.put('/api/solicitacoes/:id/assumir', verificarToken, exigirPermissao(['loja']), async (req, res) => {
     try {
         const loja = await buscarLojaDoMural(req.user);
@@ -1527,6 +1571,72 @@ app.get('/api/produtos/:id/avaliacoes', async (req, res) => {
 // ==========================================
 // ROTAS DO CHAT (API DE MENSAGENS)
 // ==========================================
+
+// Avisa a loja assim que o cliente inicia uma conversa pela página do produto.
+app.post('/api/produtos/:id/interesse-chat', verificarToken, async (req, res) => {
+    try {
+        const idCliente = String(req.user?.id || req.user?._id || '').trim();
+        if (!mongoose.Types.ObjectId.isValid(idCliente)) {
+            return res.status(401).json({ error: 'Token inválido ou sem ID de usuário.' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(String(req.params.id || ''))) {
+            return res.status(400).json({ error: 'Identificador de produto inválido.' });
+        }
+
+        const [cliente, produto] = await Promise.all([
+            Usuario.findById(idCliente).select('nome').lean(),
+            Produto.findById(req.params.id).select('idLoja nomeLoja titulo').lean()
+        ]);
+        if (!cliente) return res.status(404).json({ error: 'Usuário comprador não encontrado.' });
+        if (!produto) return res.status(404).json({ error: 'Produto não encontrado.' });
+
+        let loja = null;
+        if (mongoose.Types.ObjectId.isValid(String(produto.idLoja || ''))) {
+            loja = await Usuario.findOne({ _id: produto.idLoja, tipo: 'loja' })
+                .select('nome email')
+                .lean();
+        }
+        if (!loja && produto.nomeLoja) {
+            loja = await Usuario.findOne({ tipo: 'loja', nome: String(produto.nomeLoja).trim() })
+                .collation({ locale: 'pt', strength: 1 })
+                .select('nome email')
+                .lean();
+        }
+        if (!loja?.email) {
+            return res.status(404).json({ error: 'Não foi possível localizar o e-mail da loja deste produto.' });
+        }
+
+        // Evita enviar um aviso para a própria loja caso ela abra seu anúncio.
+        if (String(loja._id) === String(cliente._id)) {
+            return res.status(200).json({ success: true, skipped: true });
+        }
+
+        const nomeComprador = String(cliente.nome || 'Um usuário').trim();
+        const nomeProduto = String(produto.titulo || 'Produto').replace(/[\r\n]+/g, ' ').trim().slice(0, 180);
+        const textoEmail = `O usuário ${nomeComprador} iniciou um chat com você sobre o produto: ${nomeProduto}. Acesse a plataforma Peça Bruta para responder!`;
+        const linkMensagens = 'https://pecabruta.com.br/mensagens.html';
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            replyTo: process.env.SMTP_USER,
+            to: loja.email,
+            subject: `Novo interesse no seu produto: ${nomeProduto}`,
+            text: `${textoEmail}\n\n${linkMensagens}`,
+            html: `<div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5; max-width: 560px; margin: 0 auto; padding: 20px;">
+                <p>O usuário <strong>${escaparHTMLDeEmail(nomeComprador)}</strong> iniciou um chat com você sobre o produto: <strong>${escaparHTMLDeEmail(nomeProduto)}</strong>.</p>
+                <p><a href="${linkMensagens}" style="color: #d94b12;">Acesse a plataforma Peça Bruta para responder!</a></p>
+            </div>`
+        };
+
+        void transporter.sendMail(mailOptions)
+            .then((resultado) => console.log(`📩 Aviso de interesse no produto ${produto._id} enviado para ${loja.email}.`, resultado.messageId))
+            .catch((erroEmail) => console.error(`Falha ao notificar interesse no produto ${produto._id}:`, erroEmail.message, erroEmail.response || ''));
+
+        return res.status(202).json({ success: true, message: 'Aviso de interesse iniciado.' });
+    } catch (erro) {
+        console.error('Erro ao iniciar aviso de interesse no produto:', erro);
+        return res.status(500).json({ error: 'Não foi possível iniciar o aviso de interesse.' });
+    }
+});
 
 // 1. PORTA DE ENVIO (Salva a mensagem no banco)
 app.post('/api/mensagens', async (req, res) => {

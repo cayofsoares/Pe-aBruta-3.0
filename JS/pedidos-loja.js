@@ -268,12 +268,29 @@ listaSolicitacoes.addEventListener('click', async (evento) => {
 
     if (botao.dataset.acao === 'mensagem') {
         const pecaSolicitada = botao.closest('.solic-card')?.querySelector('.solic-peca')?.textContent.trim() || 'a peça solicitada';
+        const idSolicitacao = String(botao.dataset.idSolicitacao || '').trim();
         const mensagemInicial = `Olá! Vi sua solicitação sobre o item "${pecaSolicitada}" no mural. Sou lojista e consigo te atender. Podemos negociar?`;
         const parametros = new URLSearchParams({
             loja: botao.dataset.nomeCliente || '',
             chatCom: botao.dataset.idCliente || '',
-            refSolicitacao: botao.dataset.idSolicitacao || ''
+            refSolicitacao: idSolicitacao
         });
+
+        if (idSolicitacao && tokenLoja) {
+            apiFetch(`${API_URL}/solicitacoes/${encodeURIComponent(idSolicitacao)}/contatar`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${tokenLoja}` },
+                keepalive: true
+            }).then(async resposta => {
+                if (!resposta.ok) {
+                    const erroApi = await resposta.json().catch(() => ({}));
+                    console.warn('Não foi possível iniciar o aviso ao cliente:', erroApi.error || resposta.status);
+                }
+            }).catch(erro => {
+                console.warn('Falha de conexão ao iniciar o aviso ao cliente:', erro.message);
+            });
+        }
+
         window.location.href = `mensagens.html?${parametros.toString()}&msg=${encodeURIComponent(mensagemInicial)}`;
         return;
     }
