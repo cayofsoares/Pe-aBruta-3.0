@@ -2126,6 +2126,11 @@ app.post('/api/pagar', async (req, res) => {
             nome_loja: itensParaMetadata.length === 1 ? itensParaMetadata[0].nome_loja : '',
             endereco_entrega: enderecoNormalizado
         };
+        // Vincula explicitamente cada cobrança ao webhook de produção. O painel
+        // do Mercado Pago também pode definir uma URL global para a aplicação.
+        dadosDoBrick.notification_url = String(
+            process.env.MERCADOPAGO_WEBHOOK_URL || 'https://pe-abruta-3-0.onrender.com/api/webhook'
+        ).trim();
 
         // 4. Cria o pagamento de fato (API Payment)
         const pagamento = new Payment(clienteMercadoPago);
@@ -2418,8 +2423,10 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
     try {
         const pagamentoId = req.query['data.id'] || req.query.id || (req.body && req.body.data && req.body.data.id);
         const tipoEvento = req.query.type || req.query.topic || (req.body && req.body.action) || (req.body && req.body.type);
+        console.info(`[Webhook Mercado Pago] Notificação recebida. Tipo: ${tipoEvento || '(ausente)'}. Pagamento: ${pagamentoId || '(ausente)'}.`);
 
         if (!pagamentoId || !['payment', 'payment.created', 'payment.updated'].includes(tipoEvento)) {
+            console.warn('[Webhook Mercado Pago] Notificação ignorada por tipo ou ID não reconhecido.');
             return res.status(200).send('Evento ignorado.');
         }
 
