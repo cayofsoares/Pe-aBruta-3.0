@@ -1848,10 +1848,19 @@ app.get('/api/admin/financeiro/pedidos', verificarToken, exigirPermissao(['admin
     try {
         const pedidos = await Pedido.find({
             idPagamento: { $type: 'string', $ne: '' },
-            recebidoPeloCliente: true,
-            $or: [
-                { statusRepasse: { $in: ['pendente', 'concluido', 'Repasse Concluído'] } },
-                { statusRepasse: null }
+            $and: [
+                {
+                    $or: [
+                        { recebidoPeloCliente: true },
+                        { statusEntrega: { $in: ['Enviado', 'Entregue'] } }
+                    ]
+                },
+                {
+                    $or: [
+                        { statusRepasse: { $in: ['pendente', 'concluido', 'Repasse Concluído'] } },
+                        { statusRepasse: null }
+                    ]
+                }
             ]
         })
             .select('_id idPagamento idLoja lojaDona idCliente nomeCliente idProduto nomeProduto quantidade valorTotal statusEntrega dataCompra recebidoPeloCliente dataRecebimentoCliente statusRecebimento statusRepasse dataRepasse')
@@ -1897,7 +1906,11 @@ app.get('/api/admin/financeiro/pedidos', verificarToken, exigirPermissao(['admin
                 idLoja: loja ? String(loja._id) : pedido.idLoja,
                 lojaDona: loja?.nome || pedido.lojaDona || 'Loja sem identificação',
                 chavePix: loja?.chavePix || '',
-                status: repasseConcluido(pedido) ? 'Repasse Concluído' : 'Recebimento Confirmado'
+                status: repasseConcluido(pedido)
+                    ? 'Repasse Concluído'
+                    : pedido.recebidoPeloCliente
+                        ? 'Recebimento Confirmado'
+                        : String(pedido.statusEntrega || 'Aguardando Envio')
             };
         }));
     } catch (erro) {

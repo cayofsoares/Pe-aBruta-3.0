@@ -18,6 +18,7 @@ const contadorHistorico = document.getElementById('contador-historico');
 const formatadorBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 let tokenAdmin = '';
 let pedidosFinanceiros = [];
+let carregandoRepasses = false;
 
 function escaparHTML(valor) {
     return String(valor ?? '').replace(/[&<>"']/g, (caractere) => ({
@@ -82,7 +83,9 @@ function agruparPedidosPorLoja(pedidos) {
 
         const valorBruto = obterValorBrutoValido(pedido);
         const valorLiquido = valorBruto === null ? null : Number((valorBruto * 0.90).toFixed(2));
-        if (valorLiquido !== null) grupo.totalLiquidoCentavos += Math.round(valorLiquido * 100);
+        if (valorLiquido !== null && pedido.recebidoPeloCliente === true) {
+            grupo.totalLiquidoCentavos += Math.round(valorLiquido * 100);
+        }
         grupo.pedidos.push({ ...pedido, valorLiquido });
         return grupos;
     }, new Map());
@@ -100,7 +103,7 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
     if (!pedidos.length) {
         recipiente.innerHTML = historico
             ? '<div class="estado-vazio"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i><h2>Nenhum repasse concluído</h2><p>Os pagamentos confirmados pelo administrador serão mantidos aqui.</p></div>'
-            : '<div class="estado-vazio"><i class="fas fa-inbox" aria-hidden="true"></i><h2>Nenhum repasse aguardando</h2><p>Pedidos confirmados pelo cliente aparecerão aqui até a baixa do pagamento.</p></div>';
+            : '<div class="estado-vazio"><i class="fas fa-inbox" aria-hidden="true"></i><h2>Nenhum pedido no fluxo de repasse</h2><p>Pedidos enviados, entregues ou confirmados pelo cliente aparecerão aqui.</p></div>';
         return;
     }
 
@@ -119,16 +122,22 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                     ? 'Valor líquido indisponível'
                     : formatadorBRL.format(pedido.valorLiquido);
                 const tituloBotaoRepasse = 'Registrar que a transferência manual foi concluída';
+                const recebimentoConfirmado = pedido.recebidoPeloCliente === true;
+                const statusEntrega = String(pedido.statusEntrega || 'Aguardando Envio');
                 const seloStatus = historico
                     ? '<span class="status-recebimento status-concluido"><i class="fas fa-circle-check" aria-hidden="true"></i> Repasse Concluído</span>'
-                    : '<span class="status-recebimento alerta-recebimento"><i class="fas fa-bell" aria-hidden="true"></i> Recebimento confirmado · Aguardando Repasse</span>';
+                    : recebimentoConfirmado
+                        ? '<span class="status-recebimento alerta-recebimento"><i class="fas fa-bell" aria-hidden="true"></i> Recebimento confirmado · Aguardando Repasse</span>'
+                        : `<span class="status-recebimento alerta-recebimento"><i class="fas fa-truck-fast" aria-hidden="true"></i> ${escaparHTML(statusEntrega)} · Aguardando confirmação do cliente</span>`;
                 const detalheRepasse = historico
                     ? `<span class="status-repasse status-historico"><i class="fas fa-check-double" aria-hidden="true"></i> Transferência registrada em ${escaparHTML(formatarDataHora(pedido.dataRepasse))}</span>`
-                    : `<span class="prazo-repasse">Recebimento confirmado em ${escaparHTML(formatarDataHora(pedido.dataRecebimentoCliente))}</span>
-                       <button type="button" class="btn-confirmar-repasse" data-order-id="${escaparHTML(pedido._id || '')}"
-                           title="${escaparHTML(tituloBotaoRepasse)}">
-                           <i class="fas fa-check" aria-hidden="true"></i> Confirmar Pagamento
-                       </button>`;
+                    : recebimentoConfirmado
+                        ? `<span class="prazo-repasse">Recebimento confirmado em ${escaparHTML(formatarDataHora(pedido.dataRecebimentoCliente))}</span>
+                           <button type="button" class="btn-confirmar-repasse" data-order-id="${escaparHTML(pedido._id || '')}"
+                               title="${escaparHTML(tituloBotaoRepasse)}">
+                               <i class="fas fa-check" aria-hidden="true"></i> Confirmar Pagamento
+                           </button>`
+                        : '<span class="status-repasse"><i class="fas fa-circle-info" aria-hidden="true"></i> O repasse ficará disponível após o cliente confirmar o recebimento.</span>';
                 return `
                     <article class="linha-venda">
                         <div class="venda-detalhes">
@@ -157,10 +166,10 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                         <span class="dados-lojista">
                             <strong>${escaparHTML(grupo.nome)}</strong>
                             <small class="chave-pix">Pix: ${pix}</small>
-                            <small>${grupo.pedidos.length} pedido(s) ${historico ? 'no histórico' : 'aguardando repasse'}</small>
+                            <small>${grupo.pedidos.length} pedido(s) ${historico ? 'no histórico' : 'no fluxo de repasse'}</small>
                         </span>
                     </span>
-                    <span class="total-lojista"><small>${historico ? 'Total líquido repassado' : 'Total líquido a transferir'}</small><strong>${formatadorBRL.format(grupo.totalLiquidoCentavos / 100)}</strong></span>
+                    <span class="total-lojista"><small>${historico ? 'Total líquido repassado' : 'Total liberado para repasse'}</small><strong>${formatadorBRL.format(grupo.totalLiquidoCentavos / 100)}</strong></span>
                     <i class="fas fa-chevron-up seta-acordeao" aria-hidden="true"></i>
                 </button>
                 <div class="conteudo-lojista" id="${idPainel}">
@@ -175,8 +184,10 @@ function renderizarPedidos(pedidos) {
     pedidosFinanceiros = pedidos;
     const pendentes = pedidos.filter((pedido) => !repasseEstaConcluido(pedido));
     const concluidos = pedidos.filter(repasseEstaConcluido);
+    const prontosParaRepasse = pendentes.filter((pedido) => pedido.recebidoPeloCliente === true);
+    const aguardandoConfirmacaoCliente = pendentes.filter((pedido) => pedido.recebidoPeloCliente !== true);
     const gruposPendentes = [...agruparPedidosPorLoja(pendentes).values()];
-    const pedidosComValor = pendentes.filter((pedido) => obterValorBrutoValido(pedido) !== null);
+    const pedidosComValor = prontosParaRepasse.filter((pedido) => obterValorBrutoValido(pedido) !== null);
     const totalLiquidoCentavos = gruposPendentes.reduce((total, grupo) => total + grupo.totalLiquidoCentavos, 0);
 
     document.getElementById('total-pedidos').textContent = pendentes.length.toLocaleString('pt-BR');
@@ -187,12 +198,12 @@ function renderizarPedidos(pedidos) {
 
     renderizarListaPorLoja(pendentes, listaLojistas);
     renderizarListaPorLoja(concluidos, listaHistorico, true);
-    statusFinanceiro.textContent = pedidosComValor.length === pendentes.length
-        ? `${pendentes.length} aguardando repasse · ${concluidos.length} concluído(s) no histórico.`
-        : `${pedidosComValor.length} de ${pendentes.length} pedidos pendentes têm valor válido · ${concluidos.length} concluído(s) no histórico.`;
+    statusFinanceiro.textContent = `${prontosParaRepasse.length} pronto(s) para repasse · ${aguardandoConfirmacaoCliente.length} aguardando confirmação do cliente · ${concluidos.length} concluído(s) no histórico${pedidosComValor.length < prontosParaRepasse.length ? ` · ${prontosParaRepasse.length - pedidosComValor.length} pedido(s) confirmado(s) sem valor válido` : ''}.`;
 }
 
-async function carregarRepasses() {
+async function carregarRepasses(silencioso = false) {
+    if (carregandoRepasses) return;
+
     if (!obterSessaoAdmin()) {
         statusFinanceiro.textContent = 'Acesso restrito: entre com uma conta administrativa.';
         listaLojistas.innerHTML = '<div class="estado-vazio"><i class="fas fa-lock" aria-hidden="true"></i><h2>Acesso administrativo necessário</h2><a href="admin-pb-secret.html">Ir para o login administrativo</a></div>';
@@ -201,10 +212,13 @@ async function carregarRepasses() {
         return;
     }
 
+    carregandoRepasses = true;
     botaoAtualizar.disabled = true;
-    statusFinanceiro.textContent = 'Carregando repasses pendentes e histórico…';
-    listaLojistas.innerHTML = '<div class="estado-carregando"><span class="spinner"></span> Consultando pedidos com recebimento confirmado…</div>';
-    listaHistorico.innerHTML = '<div class="estado-carregando"><span class="spinner"></span> Consultando histórico de repasses…</div>';
+    if (!silencioso) {
+        statusFinanceiro.textContent = 'Carregando pedidos no fluxo de repasse e histórico…';
+        listaLojistas.innerHTML = '<div class="estado-carregando"><span class="spinner"></span> Consultando pedidos enviados, entregues e recebidos confirmados…</div>';
+        listaHistorico.innerHTML = '<div class="estado-carregando"><span class="spinner"></span> Consultando histórico de repasses…</div>';
+    }
     try {
         const resposta = await apiFetch(`${API_URL}/admin/financeiro/pedidos`, {
             headers: { Authorization: `Bearer ${tokenAdmin}` }
@@ -214,10 +228,15 @@ async function carregarRepasses() {
         renderizarPedidos(Array.isArray(dados) ? dados : []);
     } catch (erro) {
         console.error('Erro ao carregar o painel financeiro:', erro);
-        statusFinanceiro.textContent = erro.message || 'Não foi possível carregar os pedidos aprovados.';
-        listaLojistas.innerHTML = '<div class="estado-vazio erro"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><h2>Falha ao carregar os repasses</h2><p>Confira a conexão com o servidor e tente novamente.</p></div>';
-        listaHistorico.innerHTML = '<div class="estado-vazio erro"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><h2>Falha ao carregar o histórico</h2><p>Atualize os dados ou confira a conexão com o servidor.</p></div>';
+        if (silencioso) {
+            statusFinanceiro.textContent = 'Falha na atualização automática; os dados exibidos podem estar desatualizados.';
+        } else {
+            statusFinanceiro.textContent = erro.message || 'Não foi possível carregar os pedidos aprovados.';
+            listaLojistas.innerHTML = '<div class="estado-vazio erro"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><h2>Falha ao carregar os repasses</h2><p>Confira a conexão com o servidor e tente novamente.</p></div>';
+            listaHistorico.innerHTML = '<div class="estado-vazio erro"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><h2>Falha ao carregar o histórico</h2><p>Atualize os dados ou confira a conexão com o servidor.</p></div>';
+        }
     } finally {
+        carregandoRepasses = false;
         botaoAtualizar.disabled = false;
     }
 }
@@ -267,5 +286,8 @@ async function tratarCliqueListaFinanceira(evento) {
 listaLojistas.addEventListener('click', tratarCliqueListaFinanceira);
 listaHistorico.addEventListener('click', tratarCliqueListaFinanceira);
 
-botaoAtualizar.addEventListener('click', carregarRepasses);
-document.addEventListener('DOMContentLoaded', carregarRepasses);
+botaoAtualizar.addEventListener('click', () => carregarRepasses());
+document.addEventListener('DOMContentLoaded', () => carregarRepasses());
+window.setInterval(() => {
+    if (!document.hidden) carregarRepasses(true);
+}, 30000);
