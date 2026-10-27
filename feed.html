@@ -24,7 +24,7 @@
         </div>
         
         <div class="auth-buttons" id="authContainer">
-            <a href="carrinho.html" class="cart-link" title="Meu Carrinho">
+            <a href="carrinho.html" class="cart-link" id="headerCartLink" title="Meu Carrinho" style="display:none;">
                 🛒 <span id="cartCounter" class="cart-count" style="display: none;">0</span>
             </a>
             <div id="auth-section" style="display: flex; gap: 10px; align-items: center;">
@@ -40,9 +40,9 @@
         </div>
         <nav class="nav-links">
             <a href="feed.html" style="color:#fff; background: rgba(255, 77, 0, 0.2);">🏠 Início / Feed</a>
-            <a href="carrinho.html">🛒 Meu Carrinho</a>
-            <a href="pedidos.html">📦 Meus Pedidos</a>
-            <a href="mensagens.html">💬 Mensagens</a>
+            <a href="carrinho.html" id="menuCarrinhoPrivado" style="display:none;">🛒 Meu Carrinho</a>
+            <a href="pedidos.html" id="menuPedidosPrivado" style="display:none;">📦 Meus Pedidos</a>
+            <a href="mensagens.html" id="menuMensagensPrivado" style="display:none;">💬 Mensagens</a>
             <div id="areaExclusivaPJ" style="display: none;">
                 <hr style="border:0; border-top:1px solid #1a1a1a; margin: 15px 0;">
                 <a href="painel-lojista.html" style="color: #ff4d00;">📤 Postar Nova Peça</a>

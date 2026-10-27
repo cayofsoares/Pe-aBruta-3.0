@@ -171,11 +171,7 @@ function renderizarPedido(pedido) {
 async function carregarPedidos() {
     lerSessao();
     if (!tokenSessao || !idDoUsuarioLogado) {
-        listaPedidosElement.innerHTML = `
-            <div style="text-align:center;margin-top:50px;color:#ff7777;">
-                <p>Faça login para visualizar suas compras e vendas.</p>
-                <a href="login.html" style="color:#ff6a2a;font-weight:bold;">Fazer Login</a>
-            </div>`;
+        window.location.replace('login.html');
         return;
     }
 
@@ -184,6 +180,10 @@ async function carregarPedidos() {
         const resposta = await apiFetch(`${API_URL}/meus-pedidos`, {
             headers: apiHeaders({ 'Authorization': `Bearer ${tokenSessao}` })
         });
+        if (resposta.status === 401) {
+            window.location.replace('login.html');
+            return;
+        }
         const dados = await resposta.json().catch(() => ({}));
         if (!resposta.ok) throw new Error(dados.error || `Falha ao carregar pedidos (HTTP ${resposta.status}).`);
         if (!Array.isArray(dados) || dados.length === 0) {
