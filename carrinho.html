@@ -16,14 +16,21 @@
         </a>
     </header>
     <main class="cart-container">
-        <h1>SEU CARRINHO</h1>
-        <div id="cart-items" class="cart-list"></div>
-        <div class="cart-summary">
-            <div class="summary-row">
-                <span>Total:</span>
-                <span id="cart-total">R$ 0,00</span>
+        <section id="aviso-login-carrinho" class="aviso-login" style="display:none;" role="alert">
+            <h2>Login necessário</h2>
+            <p>Faça login para visualizar seu carrinho.</p>
+            <a href="login.html">FAZER LOGIN</a>
+        </section>
+        <div id="conteudo-carrinho">
+            <h1>SEU CARRINHO</h1>
+            <div id="cart-items" class="cart-list"></div>
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Total:</span>
+                    <span id="cart-total">R$ 0,00</span>
+                </div>
+                <button class="btn-checkout" onclick="finalizarCompra()">FINALIZAR PEDIDO</button>
             </div>
-            <button class="btn-checkout" onclick="finalizarCompra()">FINALIZAR PEDIDO</button>
         </div>
     </main>
   <script src="JS/carrinho.js"></script>

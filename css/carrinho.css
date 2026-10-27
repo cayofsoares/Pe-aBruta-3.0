@@ -43,6 +43,31 @@ h1 { font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 30px; border-lef
 
 .empty-msg { color: #444; text-align: center; padding: 50px; font-style: italic; }
 
+.aviso-login {
+    max-width: 560px;
+    margin: 40px auto;
+    padding: 28px;
+    border: 1px solid #3a2a22;
+    border-left: 4px solid #ff4d00;
+    border-radius: 10px;
+    background: #111;
+    color: #fff;
+    text-align: left;
+}
+.aviso-login h2 { margin: 0 0 10px; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
+.aviso-login p { margin: 0 0 20px; color: #bbb; line-height: 1.5; }
+.aviso-login a {
+    display: inline-block;
+    padding: 11px 18px;
+    border-radius: 5px;
+    background: #ff4d00;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
  /* Estilização do Logo e Efeitos */
         .logo { color: white; transition: 0.3s ease; display: inline-block; cursor: pointer; text-decoration: none; }
         .logo span { color: #ff4d00; }
@@ -67,6 +92,7 @@ h1 { font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 30px; border-lef
 /* AJUSTES PARA CELULAR (CARRINHO)           */
 /* ========================================= */
 @media (max-width: 768px) {
+    .aviso-login { margin: 24px 15px; padding: 22px 18px; }
     /* Reduz o respiro geral para aproveitar a tela pequena */
     .cart-container {
         margin: 20px auto !important;

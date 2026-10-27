@@ -9,8 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    
-    <div class="app-container">
+    <main id="aviso-login-mensagens" class="aviso-login" style="display:none;" role="alert">
+        <div class="aviso-login-icone"><i class="fas fa-lock" aria-hidden="true"></i></div>
+        <h2>Login necessário</h2>
+        <p>Faça login para acessar suas mensagens.</p>
+        <a href="login.html">FAZER LOGIN</a>
+    </main>
+
+    <div class="app-container" id="app-container" style="display:none;">
         <!-- BARRA LATERAL -->
         <aside class="sidebar-panel">
             <div class="sidebar-header">

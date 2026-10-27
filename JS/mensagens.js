@@ -5,6 +5,16 @@ function apiFetch(url, options = {}) {
     };
     return fetch(url, { ...options, headers });
 }
+
+function obterTokenSessao() {
+    let usuarioSalvo = {};
+    try {
+        usuarioSalvo = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    } catch (erro) {
+        console.warn('Dados da sessão inválidos.');
+    }
+    return sessionStorage.getItem('token') || usuarioSalvo.token || usuarioSalvo.user?.token || '';
+}
 // ==========================================
 // CÉREBRO DO INBOX: VERSÃO MESTRE (BLINDADA)
 // ==========================================
@@ -97,6 +107,12 @@ if (!usuarioAtualNome || usuarioAtualNome.trim() === "") {
 }
 
 window.onload = async function() {
+    if (!obterTokenSessao()) {
+        document.getElementById('aviso-login-mensagens').style.display = 'flex';
+        return;
+    }
+    document.getElementById('app-container').style.display = 'flex';
+
     if (tipoConta === "LOJA") {
         document.querySelector('.search-box').style.display = 'none'; 
     } else {

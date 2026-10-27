@@ -1,7 +1,26 @@
 let totalGlobal = 0; 
 
+function obterTokenSessao() {
+    let usuarioSalvo = {};
+    try {
+        usuarioSalvo = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    } catch (erro) {
+        console.warn('Dados da sessão inválidos.');
+    }
+    return sessionStorage.getItem('token') || usuarioSalvo.token || usuarioSalvo.user?.token || '';
+}
+
 function carregarCarrinho() {
-    
+    const avisoLogin = document.getElementById('aviso-login-carrinho');
+    const conteudoCarrinho = document.getElementById('conteudo-carrinho');
+    if (!obterTokenSessao()) {
+        avisoLogin.style.display = 'block';
+        conteudoCarrinho.style.display = 'none';
+        return;
+    }
+
+    avisoLogin.style.display = 'none';
+    conteudoCarrinho.style.display = 'block';
     const container = document.getElementById('cart-items');
     const totalElement = document.getElementById('cart-total');
     const itens = JSON.parse(sessionStorage.getItem('carrinho')) || [];
@@ -66,6 +85,11 @@ function removerItem(index) {
 }
 
 function finalizarCompra() {
+    if (!obterTokenSessao()) {
+        carregarCarrinho();
+        return;
+    }
+
     if (totalGlobal <= 0) {
         alert("O seu carrinho está vazio!");
         return;
