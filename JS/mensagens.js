@@ -1,29 +1,9 @@
 const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
-let tokenSessao = sessionStorage.getItem('token') || '';
-let usuarioAtualNome = '';
-let tipoConta = 'CLIENTE';
-
-try {
-    const usuarioSalvo = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-    tokenSessao = tokenSessao || usuarioSalvo.token || usuarioSalvo.user?.token || '';
-    const usuario = usuarioSalvo.user || usuarioSalvo;
-    usuarioAtualNome = String(usuario.nome || usuario.name || '').trim().toUpperCase();
-    tipoConta = String(usuario.tipo || sessionStorage.getItem('tipoUsuario') || 'cliente').toUpperCase() === 'LOJA'
-        ? 'LOJA'
-        : 'CLIENTE';
-} catch (erro) {
-    console.warn('Dados locais da sessão inválidos.');
-}
-
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
     };
-    if (tokenSessao) headers.Authorization = `Bearer ${tokenSessao}`;
-    return fetch(url, { ...options, headers }).then((response) => {
-        if (response.status === 401) window.location.replace('login.html');
-        return response;
-    });
+    return fetch(url, { ...options, headers });
 }
 // ==========================================
 // CÉREBRO DO INBOX: VERSÃO MESTRE (BLINDADA)
@@ -33,6 +13,9 @@ let contatoAtivo = null;
 let meusContatos = [];
 let lojasDoSistema = []; 
 let parceirosPorId = new Map();
+
+let usuarioAtualNome = "VISITANTE";
+let tipoConta = "CLIENTE";
 
 function escaparHTML(texto) {
     return String(texto ?? '').replace(/[&<>"']/g, caractere => ({
@@ -87,28 +70,33 @@ document.addEventListener('click', evento => {
     }
 });
 
-window.onload = async function() {
-    if (!tokenSessao) {
-        window.location.replace('login.html');
-        return;
-    }
+// 1. IDENTIFICAÇÃO A PROVA DE FALHAS (Impede a tela de congelar)
+const lojaRaw = sessionStorage.getItem('usuarioLogado') || sessionStorage.getItem('lojaLogada');
+const clienteRaw = sessionStorage.getItem('clienteLogado') || sessionStorage.getItem('usuario');
 
+if (lojaRaw) {
+    tipoConta = "LOJA";
     try {
-        const respostaSessao = await apiFetch(`${API_URL}/auth/me`);
-        if (!respostaSessao.ok) return;
-        const dadosSessao = await respostaSessao.json();
-        usuarioAtualNome = String(dadosSessao.user?.nome || '').trim().toUpperCase();
-        tipoConta = String(dadosSessao.user?.tipo || '').toLowerCase() === 'loja' ? 'LOJA' : 'CLIENTE';
-        if (!usuarioAtualNome) {
-            window.location.replace('login.html');
-            return;
-        }
-    } catch (erro) {
-        console.error('Não foi possível validar a sessão do chat:', erro);
-        document.getElementById('estadoVazio').innerHTML = '<h3>Não foi possível validar sua sessão</h3><p>Confira sua conexão e entre novamente.</p><a href="login.html">Ir para o login</a>';
-        return;
+        let obj = JSON.parse(lojaRaw);
+        usuarioAtualNome = (obj.razaoSocial || obj.nome || obj.name || "").toUpperCase();
+    } catch(e) {
+        usuarioAtualNome = lojaRaw.toUpperCase();
     }
+} else if (clienteRaw) {
+    tipoConta = "CLIENTE";
+    try {
+        let obj = JSON.parse(clienteRaw);
+        usuarioAtualNome = (obj.nome || obj.name || "").toUpperCase();
+    } catch(e) {
+        usuarioAtualNome = clienteRaw.toUpperCase();
+    }
+}
 
+if (!usuarioAtualNome || usuarioAtualNome.trim() === "") {
+    usuarioAtualNome = "USUARIO_DESCONHECIDO";
+}
+
+window.onload = async function() {
     if (tipoConta === "LOJA") {
         document.querySelector('.search-box').style.display = 'none'; 
     } else {

@@ -1,36 +1,4 @@
-const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
-let totalGlobal = 0;
-
-function obterTokenSessao() {
-    let token = sessionStorage.getItem('token');
-    try {
-        const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
-        token = token || usuario.token || usuario.user?.token || '';
-    } catch (erro) {}
-    return token || '';
-}
-
-async function validarSessaoECarregarCarrinho() {
-    const token = obterTokenSessao();
-    if (!token) {
-        window.location.replace('login.html');
-        return;
-    }
-
-    try {
-        const resposta = await fetch(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (resposta.status === 401) {
-            window.location.replace('login.html');
-            return;
-        }
-        if (!resposta.ok) throw new Error('Não foi possível validar sua sessão.');
-        carregarCarrinho();
-    } catch (erro) {
-        document.getElementById('cart-items').innerHTML = '<p class="empty-msg" style="text-align:center;padding:50px;color:#ff7777;">Não foi possível validar sua sessão. Confira sua conexão e tente novamente.</p>';
-    }
-}
+let totalGlobal = 0; 
 
 function carregarCarrinho() {
     
@@ -98,10 +66,6 @@ function removerItem(index) {
 }
 
 function finalizarCompra() {
-    if (!obterTokenSessao()) {
-        window.location.href = 'login.html';
-        return;
-    }
     if (totalGlobal <= 0) {
         alert("O seu carrinho está vazio!");
         return;
@@ -120,4 +84,4 @@ function finalizarCompra() {
     window.location.href = 'checkout.html';
 }
 
-window.onload = validarSessaoECarregarCarrinho;
+window.onload = carregarCarrinho;

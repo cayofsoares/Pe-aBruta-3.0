@@ -252,58 +252,66 @@ window.onload = () => {
     carregarProdutos();
     carregarParceiros();
     atualizarContadorCarrinho();
+
+    let userRaw = sessionStorage.getItem('usuario') || 
+                  sessionStorage.getItem('usuarioLogado') || 
+                  sessionStorage.getItem('clienteLogado') || 
+                  sessionStorage.getItem('cliente');          
+
+    let nomeAvulso = sessionStorage.getItem('usuarioNome') || 
+                     sessionStorage.getItem('nomeCliente');
+    let user;
+
+    try { 
+        user = JSON.parse(userRaw); 
+    } 
+    catch(e) { 
+        user = userRaw; 
+    }
+
+    const tipoUser = sessionStorage.getItem('tipoUsuario') || 'cliente'; 
     const authSection = document.getElementById('auth-section');
     const sidebarUser = document.getElementById('nomeUsuarioSidebar');
     const areaPJ = document.getElementById('areaExclusivaPJ');
     const linkSairSide = document.getElementById('linkSairSidebar');
     const btnLojistaPedidos = document.getElementById('btnLojistaPedidos');
 
-    const linksPrivados = [
-        document.getElementById('headerCartLink'),
-        document.getElementById('menuCarrinhoPrivado'),
-        document.getElementById('menuPedidosPrivado'),
-        document.getElementById('menuMensagensPrivado')
-    ];
-    linksPrivados.forEach((link) => { if (link) link.style.display = 'none'; });
+    if (user || nomeAvulso) {
+        let nomeExibicao = "USUÁRIO";
+        
+        if (user && typeof user === 'object') {
+            nomeExibicao = user.nome || user.name || "USUÁRIO";
+        } else if (nomeAvulso) {
+            nomeExibicao = nomeAvulso;
+        } else if (typeof user === 'string' && user.trim() !== "") {
+            nomeExibicao = user;
+        }
 
-    const token = sessionStorage.getItem('token');
-    if (token) {
-        fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-            .then(async (resposta) => {
-                if (!resposta.ok) {
-                    if (resposta.status === 401) {
-                        ['token', 'usuario', 'usuarioLogado', 'clienteLogado', 'cliente', 'usuarioNome', 'nomeCliente', 'tipoUsuario']
-                            .forEach((chave) => sessionStorage.removeItem(chave));
-                    }
-                    return null;
-                }
-                return resposta.json();
-            })
-            .then((dados) => {
-                const usuario = dados?.user;
-                if (!usuario?.id || !usuario?.nome) return;
+        if (sidebarUser) sidebarUser.innerText = nomeExibicao.toUpperCase();
+        if (linkSairSide) linkSairSide.style.display = 'block';
 
-                const nomeExibicao = String(usuario.nome).trim();
-                const tipoUser = String(usuario.tipo || '').toLowerCase();
-                linksPrivados.forEach((link) => { if (link) link.style.display = ''; });
-                if (sidebarUser) sidebarUser.textContent = nomeExibicao.toUpperCase();
-                if (linkSairSide) linkSairSide.style.display = 'block';
+        // VERIFICA SE É LOJA
+        if (tipoUser === 'loja' || tipoUser === 'admin') {
+            if (areaPJ) areaPJ.style.display = 'block';
+            if (authSection) {
+                authSection.innerHTML = `
+                    <a href="javascript:void(0)" onclick="window.location.href='sistema-empresa.html'" class="user-link-header">
+                        ${nomeExibicao.toUpperCase()}
+                    </a>
+                    <button onclick="logout()" class="btn-logout-header">Sair</button>
+                `;
+            }
 
-                if (tipoUser === 'loja' || tipoUser === 'admin') {
-                    if (areaPJ) areaPJ.style.display = 'block';
-                    if (btnLojistaPedidos) btnLojistaPedidos.style.display = 'block';
-                    if (authSection) {
-                        authSection.innerHTML = '<a href="sistema-empresa.html" class="user-link-header" id="nomeAutenticadoHeader"></a><button onclick="logout()" class="btn-logout-header">Sair</button>';
-                        document.getElementById('nomeAutenticadoHeader').textContent = nomeExibicao.toUpperCase();
-                    }
-                } else if (authSection) {
-                    authSection.innerHTML = '<span id="nomeAutenticadoHeader" style="color:#ff4d00;font-family:Orbitron;font-weight:bold;font-size:12px;margin-right:10px;cursor:pointer;"></span><button onclick="logout()" class="btn-logout-header">Sair</button>';
-                    const nomeHeader = document.getElementById('nomeAutenticadoHeader');
-                    nomeHeader.textContent = nomeExibicao.toUpperCase();
-                    nomeHeader.addEventListener('click', () => { window.location.href = 'perfil-cliente.html'; });
-                }
-            })
-            .catch((erro) => console.error('Falha ao validar a sessão da navegação:', erro));
+            // Mostra o botão de requisições para lojistas.
+            if (btnLojistaPedidos) btnLojistaPedidos.style.display = 'block';
+        } else if (authSection) {
+            authSection.innerHTML = `
+                <span style="color: #ff4d00; font-family: 'Orbitron'; font-weight: bold; font-size: 12px; margin-right: 10px; cursor: pointer;" onclick="window.location.href='perfil-cliente.html'">
+                    ${nomeExibicao.toUpperCase()}
+                </span>
+                <button onclick="logout()" class="btn-logout-header">Sair</button>
+            `;
+        }
     }
 
     // Nova variável global para segurar os dados vindos da API
@@ -548,6 +556,42 @@ function toggleSidebar() {
         overlay.classList.toggle('active');
     }
 }
+
+window.onload = () => {
+    carregarProdutos();
+    carregarParceiros();
+    atualizarContadorCarrinho();
+
+    let userRaw = sessionStorage.getItem('usuario') || 
+                  sessionStorage.getItem('usuarioLogado') || 
+                  sessionStorage.getItem('clienteLogado') || 
+                  sessionStorage.getItem('cliente');          
+    let nomeAvulso = sessionStorage.getItem('usuarioNome') || sessionStorage.getItem('nomeCliente');
+    let user;
+    try { user = JSON.parse(userRaw); } catch(e) { user = userRaw; }
+
+    const tipoUser = sessionStorage.getItem('tipoUsuario') || 'cliente';
+    const authSection = document.getElementById('auth-section');
+    const sidebarUser = document.getElementById('nomeUsuarioSidebar');
+    const areaPJ = document.getElementById('areaExclusivaPJ');
+    const linkSairSide = document.getElementById('linkSairSidebar');
+    const btnLojistaPedidos = document.getElementById('btnLojistaPedidos');
+
+    if (user || nomeAvulso) {
+        const nomeExibicao = typeof user === 'object'
+            ? (user.nome || user.name || 'USUÁRIO')
+            : (nomeAvulso || user || 'USUÁRIO');
+        if (sidebarUser) sidebarUser.innerText = nomeExibicao.toUpperCase();
+        if (linkSairSide) linkSairSide.style.display = 'block';
+        if (tipoUser === 'loja' || tipoUser === 'admin') {
+            if (areaPJ) areaPJ.style.display = 'block';
+            if (btnLojistaPedidos) btnLojistaPedidos.style.display = 'block';
+            if (authSection) authSection.innerHTML = `<a href="javascript:void(0)" onclick="window.location.href='sistema-empresa.html'" class="user-link-header">${nomeExibicao.toUpperCase()}</a><button onclick="logout()" class="btn-logout-header">Sair</button>`;
+        } else if (authSection) {
+            authSection.innerHTML = `<span style="color:#ff4d00;font-family:'Orbitron';font-weight:bold;font-size:12px;margin-right:10px;cursor:pointer;" onclick="window.location.href='perfil-cliente.html'">${nomeExibicao.toUpperCase()}</span><button onclick="logout()" class="btn-logout-header">Sair</button>`;
+        }
+    }
+};
 
 };
 

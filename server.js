@@ -1072,30 +1072,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 });
 
-app.get('/api/auth/me', verificarToken, async (req, res) => {
-    try {
-        const idUsuario = String(req.user?.id || req.user?._id || '').trim();
-        if (!mongoose.Types.ObjectId.isValid(idUsuario)) {
-            return res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' });
-        }
-
-        const usuario = await Usuario.findById(idUsuario).select('nome email tipo').lean();
-        if (!usuario) return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
-
-        return res.json({
-            user: {
-                id: String(usuario._id),
-                nome: usuario.nome,
-                email: usuario.email,
-                tipo: usuario.tipo
-            }
-        });
-    } catch (erro) {
-        console.error('Erro ao validar sessão:', erro.message);
-        return res.status(500).json({ error: 'Não foi possível validar a sessão.' });
-    }
-});
-
 // =========================================================================
 // --- INÍCIO: ROTAS DE ENDEREÇO PARA CLIENTES (CORRIGIDAS) ---
 // =========================================================================
@@ -1662,47 +1638,21 @@ app.post('/api/produtos/:id/interesse-chat', verificarToken, async (req, res) =>
     }
 });
 
-const normalizarNomeChat = (valor) => String(valor || '').trim().normalize('NFKC').toLocaleUpperCase('pt-BR');
-
-// 1. PORTA DE ENVIO: remetente sempre vem da conta autenticada, nunca do body.
-app.post('/api/mensagens', verificarToken, async (req, res) => {
+// 1. PORTA DE ENVIO (Salva a mensagem no banco)
+app.post('/api/mensagens', async (req, res) => {
     try {
-        const idUsuario = String(req.user?.id || req.user?._id || '').trim();
-        if (!mongoose.Types.ObjectId.isValid(idUsuario)) {
-            return res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' });
-        }
-
-        const usuario = await Usuario.findById(idUsuario).select('nome').lean();
-        if (!usuario?.nome) return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
-
-        const remetente = normalizarNomeChat(usuario.nome);
-        const destinatarioInformado = normalizarNomeChat(req.body?.destinatario);
-        const texto = typeof req.body?.texto === 'string' ? req.body.texto.trim() : '';
-        if (!destinatarioInformado || !texto) return res.status(400).json({ error: 'Destinatário e mensagem são obrigatórios.' });
-        if (texto.length > 5000) return res.status(413).json({ error: 'A mensagem excede o limite de 5.000 caracteres.' });
-        if (req.body?.remetente && normalizarNomeChat(req.body.remetente) !== remetente) {
-            return res.status(403).json({ error: 'O remetente não corresponde à conta autenticada.' });
-        }
-        if (destinatarioInformado === remetente) {
-            return res.status(400).json({ error: 'Não é possível enviar uma mensagem para a própria conta.' });
-        }
-
-        const usuarioDestino = await Usuario.findOne({ nome: destinatarioInformado })
-            .collation({ locale: 'pt', strength: 1 })
-            .select('nome')
-            .lean();
-        if (!usuarioDestino?.nome) return res.status(404).json({ error: 'Destinatário não encontrado.' });
-
+        const { remetente, destinatario, texto } = req.body;
+        if (!remetente || !destinatario || !texto) return res.status(400).json({ erro: "Dados incompletos." });
+        
         const novaMensagem = new Mensagem({
-            remetente,
-            destinatario: normalizarNomeChat(usuarioDestino.nome),
-            texto
+            remetente: remetente.toUpperCase(),
+            destinatario: destinatario.toUpperCase(),
+            texto: texto
         });
         await novaMensagem.save();
-        return res.status(201).json(novaMensagem);
+        res.status(201).json(novaMensagem);
     } catch (erro) {
-        console.error('Erro ao salvar mensagem autenticada:', erro.message);
-        return res.status(500).json({ error: 'Erro ao salvar mensagem.' });
+        res.status(500).json({ erro: "Erro ao salvar mensagem." });
     }
 });
 
@@ -1773,22 +1723,12 @@ app.post('/api/pedidos/:id/contatar', verificarToken, async (req, res) => {
     }
 });
 
-// 2. PORTA DE LEITURA: o token precisa pertencer a um dos participantes.
-app.get('/api/mensagens/:usuario1/:usuario2', verificarToken, async (req, res) => {
+// 2. PORTA DE LEITURA (Puxa a conversa entre duas pessoas)
+app.get('/api/mensagens/:usuario1/:usuario2', async (req, res) => {
     try {
-        const idUsuario = String(req.user?.id || req.user?._id || '').trim();
-        if (!mongoose.Types.ObjectId.isValid(idUsuario)) {
-            return res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' });
-        }
-        const usuario = await Usuario.findById(idUsuario).select('nome').lean();
-        if (!usuario?.nome) return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
-
-        const u1 = normalizarNomeChat(req.params.usuario1);
-        const u2 = normalizarNomeChat(req.params.usuario2);
-        const nomeAutenticado = normalizarNomeChat(usuario.nome);
-        if (!u1 || !u2 || (u1 !== nomeAutenticado && u2 !== nomeAutenticado)) {
-            return res.status(403).json({ error: 'Acesso negado a esta conversa.' });
-        }
+        // AQUI ESTÁ A MÁGICA: Decodificando os nomes
+        const u1 = decodeURIComponent(req.params.usuario1).toUpperCase();
+        const u2 = decodeURIComponent(req.params.usuario2).toUpperCase();
         
         const historico = await Mensagem.find({
             $or: [
@@ -1797,27 +1737,16 @@ app.get('/api/mensagens/:usuario1/:usuario2', verificarToken, async (req, res) =
             ]
         }).sort({ dataEnvio: 1 });
         
-        return res.status(200).json(historico);
+        res.status(200).json(historico);
     } catch (erro) {
-        console.error('Erro ao buscar conversa autenticada:', erro.message);
-        return res.status(500).json({ error: 'Erro ao buscar as mensagens.' });
+        res.status(500).json({ erro: "Erro ao buscar as mensagens." });
     }
 });
 
-// 3. PORTA DA BARRA LATERAL: só retorna contatos da conta autenticada.
-app.get('/api/lista-contatos/:usuario', verificarToken, async (req, res) => {
+// 3. PORTA DA BARRA LATERAL (Puxa os contatos salvos)
+app.get('/api/lista-contatos/:usuario', async (req, res) => {
     try {
-        const idUsuario = String(req.user?.id || req.user?._id || '').trim();
-        if (!mongoose.Types.ObjectId.isValid(idUsuario)) {
-            return res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' });
-        }
-        const usuario = await Usuario.findById(idUsuario).select('nome').lean();
-        if (!usuario?.nome) return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
-
-        const u = normalizarNomeChat(usuario.nome);
-        if (normalizarNomeChat(req.params.usuario) !== u) {
-            return res.status(403).json({ error: 'Acesso negado à lista de contatos.' });
-        }
+        const u = req.params.usuario.toUpperCase();
         const historico = await Mensagem.find({
             $or: [{ remetente: u }, { destinatario: u }]
         });
@@ -1828,10 +1757,9 @@ app.get('/api/lista-contatos/:usuario', verificarToken, async (req, res) => {
             if (msg.destinatario !== u) contatos.add(msg.destinatario);
         });
 
-        return res.status(200).json(Array.from(contatos));
+        res.status(200).json(Array.from(contatos));
     } catch (erro) {
-        console.error('Erro ao buscar contatos autenticados:', erro.message);
-        return res.status(500).json({ error: 'Erro ao buscar contatos.' });
+        res.status(500).json({ erro: "Erro ao buscar contatos." });
     }
 });
 
