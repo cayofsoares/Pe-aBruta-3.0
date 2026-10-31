@@ -16,6 +16,7 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const crypto = require('crypto'); // NOVO: Para gerar tokens de verificação de e-mail
 const nodemailer = require('nodemailer'); // NOVO: Para envio de e-mails
+const TAXA_COMISSAO_PERCENTUAL = 5;
 
 // --- 1. VERIFICAÇÃO OBRIGATÓRIA DE VARIÁVEIS DE AMBIENTE NA INICIALIZAÇÃO ---
 if (!process.env.JWT_SECRET) {
@@ -1478,10 +1479,37 @@ app.post('/api/produtos/postar', verificarToken, exigirPermissao(['loja', 'admin
         }
 
         // === 🔴 CORRIGIDO: Adicionada a extração de 'opcoes' do corpo da requisição ===
-        const { titulo, preco, categoria, descricao, imagens, opcoes, visibilidade } = req.body;
+        const { titulo, preco, precoSugerido, categoria, descricao, imagens, opcoes, visibilidade } = req.body;
         const visibilidadeProduto = String(visibilidade || 'publico').trim().toLowerCase() === 'reservado'
             ? 'reservado'
             : 'publico';
+
+        // O formulário novo envia o preço sugerido. Versões anteriores enviavam o
+        // preço final já acrescido de 10%; nesse caso, recuperamos a base antes de
+        // aplicar a comissão atual, evitando duplicar a taxa durante a transição.
+        let precoFinal = preco;
+        if (String(req.user.tipo || '').toLowerCase() === 'loja') {
+            let precoBaseCentavos;
+            try {
+                precoBaseCentavos = valorParaCentavos(precoSugerido !== undefined ? precoSugerido : preco);
+            } catch (erroPreco) {
+                return res.status(400).json({ error: 'Preço sugerido inválido. Informe um valor com até duas casas decimais.' });
+            }
+            if (precoSugerido === undefined) {
+                precoBaseCentavos = (precoBaseCentavos * 100n + 55n) / 110n;
+            }
+            if (precoBaseCentavos <= 0n) {
+                return res.status(400).json({ error: 'O preço sugerido precisa ser maior que zero.' });
+            }
+
+            const percentualComissao = BigInt(TAXA_COMISSAO_PERCENTUAL);
+            const taxaCentavos = (precoBaseCentavos * percentualComissao + 50n) / 100n;
+            const precoFinalCentavos = precoBaseCentavos + taxaCentavos;
+            if (precoFinalCentavos > BigInt(Number.MAX_SAFE_INTEGER)) {
+                return res.status(400).json({ error: 'O preço final excede o limite permitido.' });
+            }
+            precoFinal = centavosParaDecimal(precoFinalCentavos);
+        }
         
         // 🚨 ESPIÃO DO BACKEND: Imprime no terminal o que o servidor recebeu
         console.log("📥 DADOS RECEBIDOS DO NAVEGADOR:", { tituloRecebido: titulo, opcoesRecebidas: opcoes });
@@ -1495,7 +1523,7 @@ app.post('/api/produtos/postar', verificarToken, exigirPermissao(['loja', 'admin
             nomeLoja: nomeLojaSeguro, 
             visibilidade: visibilidadeProduto,
             titulo, 
-            preco, 
+            preco: precoFinal, 
             categoria, 
             descricao, 
             imagens, // Gravando o array de fotos no banco
@@ -2449,9 +2477,17 @@ async function notificarLojaRecebimentoConfirmado(pedido) {
 
         const nomeProduto = String(pedido.nomeProduto || 'produto').trim();
         const valorBruto = Number(pedido.valorTotal);
-        const valorLiquido = Number.isFinite(valorBruto) && valorBruto >= 0
-            ? Number((valorBruto * 0.9).toFixed(2))
-            : null;
+        let valorLiquido = null;
+        if (Number.isFinite(valorBruto) && valorBruto >= 0) {
+            try {
+                const brutoCentavos = valorParaCentavos(String(pedido.valorTotal));
+                const percentualRepasse = 100n - BigInt(TAXA_COMISSAO_PERCENTUAL);
+                const liquidoCentavos = (brutoCentavos * percentualRepasse + 50n) / 100n;
+                valorLiquido = Number(centavosParaDecimal(liquidoCentavos));
+            } catch (erroValor) {
+                valorLiquido = null;
+            }
+        }
         const valorFormatado = valorLiquido === null
             ? 'valor a confirmar'
             : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorLiquido);

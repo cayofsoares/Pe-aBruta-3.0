@@ -16,6 +16,8 @@ const botaoAtualizar = document.getElementById('btn-atualizar');
 const contadorPendentes = document.getElementById('contador-pendentes');
 const contadorHistorico = document.getElementById('contador-historico');
 const formatadorBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const TAXA_COMISSAO_PERCENTUAL = 5;
+const PERCENTUAL_REPASSE_LOJISTA = 100 - TAXA_COMISSAO_PERCENTUAL;
 let tokenAdmin = '';
 let pedidosFinanceiros = [];
 let carregandoRepasses = false;
@@ -61,6 +63,13 @@ function obterValorBrutoValido(pedido) {
     return Number.isFinite(valor) && valor >= 0 ? valor : null;
 }
 
+function calcularValorLiquido(valorBruto) {
+    const brutoCentavos = Math.round(valorBruto * 100);
+    if (!Number.isSafeInteger(brutoCentavos) || brutoCentavos < 0) return null;
+    const liquidoCentavos = (BigInt(brutoCentavos) * BigInt(PERCENTUAL_REPASSE_LOJISTA) + 50n) / 100n;
+    return Number(liquidoCentavos) / 100;
+}
+
 function agruparPedidosPorLoja(pedidos) {
     return pedidos.reduce((grupos, pedido) => {
         const chave = obterChaveLoja(pedido);
@@ -82,7 +91,7 @@ function agruparPedidosPorLoja(pedidos) {
         }
 
         const valorBruto = obterValorBrutoValido(pedido);
-        const valorLiquido = valorBruto === null ? null : Number((valorBruto * 0.90).toFixed(2));
+        const valorLiquido = valorBruto === null ? null : calcularValorLiquido(valorBruto);
         if (valorLiquido !== null && pedido.recebidoPeloCliente === true) {
             grupo.totalLiquidoCentavos += Math.round(valorLiquido * 100);
         }

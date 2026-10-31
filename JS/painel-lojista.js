@@ -1,4 +1,5 @@
 const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
+const TAXA_COMISSAO_PERCENTUAL = 5;
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),
@@ -82,8 +83,10 @@ function bloquearPublicacaoSemChavePix() {
 
         function calcularPrecoFinal() {
             const valorLojista = parseFloat(document.getElementById('precoPeca').value) || 0;
-            const comissao = valorLojista * 0.10;
-            const valorFinal = valorLojista + comissao;
+            const valorLojistaCentavos = Math.round(valorLojista * 100);
+            const comissaoCentavos = Math.floor((valorLojistaCentavos * TAXA_COMISSAO_PERCENTUAL + 50) / 100);
+            const valorFinal = (valorLojistaCentavos + comissaoCentavos) / 100;
+            const comissao = comissaoCentavos / 100;
             document.getElementById('infoPreco').innerHTML = `Preço no site: <b>R$ ${valorFinal.toFixed(2)}</b> (Taxa: R$ ${comissao.toFixed(2)})`;
             return valorFinal.toFixed(2);
         }
@@ -171,7 +174,7 @@ function bloquearPublicacaoSemChavePix() {
 
             const novaPecaPayload = {
                 titulo: document.getElementById('tituloPeca').value,
-                preco: calcularPrecoFinal(),
+                precoSugerido: document.getElementById('precoPeca').value,
                 categoria: document.getElementById('categoria').value,
                 descricao: document.getElementById('descricaoPeca').value,
                 imagens: fotosFinais,
