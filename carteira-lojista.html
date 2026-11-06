@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0b0b">
+    <title>Minha Carteira | PEÇA BRUTA</title>
+    <link rel="stylesheet" href="css/carteira-lojista.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <header class="wallet-header">
+        <a class="wallet-logo" href="feed.html" aria-label="Peça Bruta, voltar ao feed">PEÇA<span>BRUTA</span></a>
+        <a class="wallet-back" href="feed.html"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar ao feed</a>
+    </header>
+
+    <main class="wallet-main" id="conteudoCarteira" hidden>
+        <section class="wallet-intro">
+            <p class="wallet-eyebrow">ÁREA DA LOJA</p>
+            <h1>MINHA <span>CARTEIRA</span></h1>
+            <p class="wallet-description">Acompanhe as vendas aprovadas da sua loja e os valores estimados do dia.</p>
+        </section>
+
+        <aside class="wallet-notice" role="note">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <p>Os valores são estimativas calculadas com a comissão atual da plataforma. O valor elegível considera apenas pedidos cujo recebimento foi confirmado pelo cliente. Esta tela acompanha os pedidos; ela não inicia uma transferência.</p>
+        </aside>
+
+        <section class="wallet-summary" aria-label="Resumo das vendas de hoje">
+            <article class="summary-card">
+                <span>Vendas pendentes de hoje</span>
+                <strong id="wallet-count">0</strong>
+            </article>
+            <article class="summary-card">
+                <span>Total bruto pendente de hoje</span>
+                <strong id="wallet-gross">R$ 0,00</strong>
+            </article>
+            <article class="summary-card summary-highlight">
+                <span>Líquido elegível após confirmação</span>
+                <strong id="wallet-eligible">R$ 0,00</strong>
+            </article>
+        </section>
+
+        <section class="wallet-sales-section" aria-labelledby="tituloVendasDia">
+            <div class="wallet-section-heading">
+                <div>
+                    <p class="wallet-eyebrow">PEDIDOS APROVADOS</p>
+                    <h2 id="tituloVendasDia">Vendas de hoje</h2>
+                </div>
+                <button id="wallet-refresh" class="wallet-refresh" type="button">
+                    <i class="fas fa-rotate" aria-hidden="true"></i> Atualizar
+                </button>
+            </div>
+            <p id="wallet-status" class="wallet-status" role="status" aria-live="polite">Carregando suas vendas…</p>
+            <div id="wallet-sales" class="wallet-sales"></div>
+            <p class="wallet-updated" id="wallet-updated"></p>
+        </section>
+    </main>
+
+    <div id="wallet-access-error" class="wallet-access-error" hidden>
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        <h1>Acesso exclusivo para lojistas</h1>
+        <p>Entre com a conta da sua loja para consultar as próprias vendas.</p>
+        <a href="login-empresa.html">Entrar como lojista</a>
+    </div>
+
+    <script src="JS/carteira-lojista.js"></script>
+</body>
+</html>

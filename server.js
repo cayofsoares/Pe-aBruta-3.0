@@ -2381,6 +2381,86 @@ app.get('/api/meus-pedidos', verificarToken, async (req, res) => {
     }
 });
 
+// Carteira diária: consulta somente vendas aprovadas da loja autenticada.
+// Os pedidos permanecem no banco; a janela de data renova a lista a cada dia.
+app.get('/api/loja/carteira/hoje', verificarToken, exigirPermissao(['loja']), async (req, res) => {
+    try {
+        const loja = await buscarLojaDoToken(req.user);
+        if (!loja) return res.status(404).json({ error: 'Loja não encontrada.' });
+
+        const hojeSaoPaulo = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Sao_Paulo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date());
+
+        const pedidosHoje = await Pedido.find({
+            idLoja: String(loja._id),
+            idPagamento: { $type: 'string', $ne: '' },
+            statusRepasse: { $nin: ['concluido', 'Repasse Concluído', 'repasse concluído'] },
+            $expr: {
+                $eq: [
+                    {
+                        $dateToString: {
+                            date: '$dataCompra',
+                            format: '%Y-%m-%d',
+                            timezone: 'America/Sao_Paulo'
+                        }
+                    },
+                    hojeSaoPaulo
+                ]
+            }
+        })
+            .select('_id nomeProduto quantidade valorTotal dataCompra statusEntrega recebidoPeloCliente statusRepasse')
+            .sort({ dataCompra: -1 })
+            .lean();
+
+        const vendas = pedidosHoje.map((pedido) => {
+            let valorBrutoCentavos = null;
+            let valorLiquidoEstimadoCentavos = null;
+            try {
+                valorBrutoCentavos = valorParaCentavos(String(pedido.valorTotal));
+                const percentualLoja = 100n - BigInt(TAXA_COMISSAO_PERCENTUAL);
+                valorLiquidoEstimadoCentavos = (valorBrutoCentavos * percentualLoja + 50n) / 100n;
+            } catch (erroValor) {
+                console.warn(`Valor inválido no pedido ${pedido._id} ao montar a carteira diária.`);
+            }
+
+            return {
+                id: String(pedido._id),
+                produto: String(pedido.nomeProduto || 'Produto'),
+                quantidade: Number(pedido.quantidade || 1),
+                valorBrutoCentavos: valorBrutoCentavos?.toString() ?? null,
+                valorLiquidoEstimadoCentavos: valorLiquidoEstimadoCentavos?.toString() ?? null,
+                dataCompra: pedido.dataCompra,
+                statusEntrega: String(pedido.statusEntrega || 'Aguardando Envio'),
+                recebidoPeloCliente: pedido.recebidoPeloCliente === true
+            };
+        });
+
+        const totalBrutoCentavos = vendas.reduce((soma, venda) =>
+            soma + (venda.valorBrutoCentavos === null ? 0n : BigInt(venda.valorBrutoCentavos)), 0n);
+        const totalLiquidoEstimadoCentavos = vendas.reduce((soma, venda) =>
+            soma + (venda.valorLiquidoEstimadoCentavos === null ? 0n : BigInt(venda.valorLiquidoEstimadoCentavos)), 0n);
+        const totalElegivelCentavos = vendas.reduce((soma, venda) => {
+            if (!venda.recebidoPeloCliente || venda.valorLiquidoEstimadoCentavos === null) return soma;
+            return soma + BigInt(venda.valorLiquidoEstimadoCentavos);
+        }, 0n);
+
+        return res.json({
+            data: hojeSaoPaulo,
+            vendas,
+            totalBrutoCentavos: totalBrutoCentavos.toString(),
+            totalLiquidoEstimadoCentavos: totalLiquidoEstimadoCentavos.toString(),
+            totalElegivelCentavos: totalElegivelCentavos.toString()
+        });
+    } catch (erro) {
+        console.error('Erro ao carregar carteira diária da loja:', erro);
+        return res.status(500).json({ error: 'Não foi possível carregar as vendas de hoje.' });
+    }
+});
+
 // Atualiza somente statusEntrega do pedido da loja autenticada; não altera campos financeiros.
 app.put('/api/pedidos/:id/status', verificarToken, async (req, res) => {
     try {

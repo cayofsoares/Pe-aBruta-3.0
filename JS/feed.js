@@ -275,6 +275,7 @@ window.onload = () => {
     const areaPJ = document.getElementById('areaExclusivaPJ');
     const linkSairSide = document.getElementById('linkSairSidebar');
     const btnLojistaPedidos = document.getElementById('btnLojistaPedidos');
+    const btnLojistaCarteira = document.getElementById('btnLojistaCarteira');
 
     if (user || nomeAvulso) {
         let nomeExibicao = "USUÁRIO";
@@ -576,6 +577,7 @@ window.onload = () => {
     const areaPJ = document.getElementById('areaExclusivaPJ');
     const linkSairSide = document.getElementById('linkSairSidebar');
     const btnLojistaPedidos = document.getElementById('btnLojistaPedidos');
+    const btnLojistaCarteira = document.getElementById('btnLojistaCarteira');
 
     if (user || nomeAvulso) {
         const nomeExibicao = typeof user === 'object'
@@ -586,6 +588,7 @@ window.onload = () => {
         if (tipoUser === 'loja' || tipoUser === 'admin') {
             if (areaPJ) areaPJ.style.display = 'block';
             if (btnLojistaPedidos) btnLojistaPedidos.style.display = 'block';
+            if (tipoUser === 'loja' && btnLojistaCarteira) btnLojistaCarteira.style.display = 'block';
             if (authSection) authSection.innerHTML = `<a href="javascript:void(0)" onclick="window.location.href='sistema-empresa.html'" class="user-link-header">${nomeExibicao.toUpperCase()}</a><button onclick="logout()" class="btn-logout-header">Sair</button>`;
         } else if (authSection) {
             authSection.innerHTML = `<span style="color:#ff4d00;font-family:'Orbitron';font-weight:bold;font-size:12px;margin-right:10px;cursor:pointer;" onclick="window.location.href='perfil-cliente.html'">${nomeExibicao.toUpperCase()}</span><button onclick="logout()" class="btn-logout-header">Sair</button>`;
