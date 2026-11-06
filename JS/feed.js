@@ -571,7 +571,8 @@ window.onload = () => {
     let user;
     try { user = JSON.parse(userRaw); } catch(e) { user = userRaw; }
 
-    const tipoUser = sessionStorage.getItem('tipoUsuario') || 'cliente';
+    const dadosUsuarioFeed = user && typeof user === 'object' ? (user.user || user) : {};
+    const tipoUser = String(dadosUsuarioFeed.tipo || sessionStorage.getItem('tipoUsuario') || 'cliente').trim().toLowerCase();
     const authSection = document.getElementById('auth-section');
     const sidebarUser = document.getElementById('nomeUsuarioSidebar');
     const areaPJ = document.getElementById('areaExclusivaPJ');
@@ -607,3 +608,23 @@ window.addEventListener('pageshow', function(event) {
         window.location.reload(); // Força um reload limpo para atualizar o nome no cabeçalho
     }
 });
+
+function sincronizarBotaoCarteiraLojista() {
+    const botaoCarteira = document.getElementById('btnLojistaCarteira');
+    if (!botaoCarteira) return;
+
+    let sessao = {};
+    try {
+        sessao = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    } catch (erro) {
+        sessao = {};
+    }
+
+    const usuario = sessao.user || sessao;
+    const token = sessionStorage.getItem('token') || sessao.token || usuario.token || '';
+    const tipo = String(usuario.tipo || sessionStorage.getItem('tipoUsuario') || '').trim().toLowerCase();
+    botaoCarteira.style.display = tipo === 'loja' && Boolean(token) ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', sincronizarBotaoCarteiraLojista);
+window.addEventListener('pageshow', sincronizarBotaoCarteiraLojista);
