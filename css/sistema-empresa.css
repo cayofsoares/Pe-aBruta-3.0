@@ -303,3 +303,61 @@
             #toast-container { right: 9px; bottom: 9px; left: 9px; }
             .toast { padding: 12px 14px; }
         }
+/* Configuração regional do frete da loja */
+.frete-config-loja {
+    margin-top: 8px;
+    padding: 18px;
+    border: 1px solid rgba(255, 106, 42, 0.28);
+    border-radius: 10px;
+    background: rgba(255, 106, 42, 0.045);
+}
+
+.frete-config-loja > label:first-child {
+    display: block;
+    margin-bottom: 8px;
+    color: #ffab7e;
+    font-weight: 800;
+}
+
+.frete-config-ajuda,
+.frete-config-nota {
+    display: block;
+    color: var(--text-dim, #aaa);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.frete-config-ajuda {
+    margin: 0 0 16px;
+}
+
+.frete-config-loja > input {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 6px 0 14px;
+}
+
+.frete-tarifas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.frete-tarifas-grid .form-group {
+    min-width: 0;
+}
+
+.frete-config-nota {
+    color: #d2bd9d;
+}
+
+@media (max-width: 600px) {
+    .frete-config-loja {
+        padding: 14px;
+    }
+
+    .frete-tarifas-grid {
+        grid-template-columns: 1fr;
+    }
+}

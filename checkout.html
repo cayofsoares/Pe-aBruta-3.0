@@ -16,7 +16,11 @@
         <div class="resumo-pedido">
             <h2>Resumo do Pedido</h2>
             <h3 id="nomeProdutoTela">Carregando Produto...</h3>
-            <div class="preco-destaque" id="precoProdutoTela">R$ 0,00</div>
+            <div class="resumo-frete-linha"><span>Produtos</span><strong id="subtotalProdutosTela">R$ 0,00</strong></div>
+            <div class="resumo-frete-linha"><span>Entrega</span><strong id="freteTotalTela">Informe o CEP</strong></div>
+            <div id="freteLojasDetalhe" class="frete-lojas-detalhe" aria-live="polite"></div>
+            <div class="resumo-total-linha"><span>Total</span><strong class="preco-destaque" id="precoProdutoTela">R$ 0,00</strong></div>
+            <p id="statusFreteCheckout" class="status-frete-checkout" aria-live="polite">Informe o CEP de entrega para calcular o frete estimado de cada loja.</p>
         </div>
 
        <section class="endereco-entrega" aria-labelledby="tituloEnderecoEntrega">

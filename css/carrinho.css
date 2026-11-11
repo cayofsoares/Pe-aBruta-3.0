@@ -33,6 +33,7 @@ h1 { font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 30px; border-lef
 }
 .summary-row { font-family: 'Orbitron'; font-size: 1.2rem; margin-bottom: 20px; }
 #cart-total { color: #ff4d00; margin-left: 15px; }
+.cart-frete-nota { margin: -10px 0 18px; color: #aaa; font-size: 12px; line-height: 1.5; }
 
 .btn-checkout {
     background: #ff4d00; color: #fff; border: none;

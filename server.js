@@ -171,6 +171,17 @@ const enderecoSchema = new mongoose.Schema({
     cidade: { type: String, required: true },
     estado: { type: String, required: true }
 });
+const freteLojaSchema = new mongoose.Schema({
+    cepOrigem: { type: String, trim: true, default: '' },
+    cidadeOrigem: { type: String, trim: true, default: '' },
+    ufOrigem: { type: String, trim: true, uppercase: true, default: '' },
+    tarifasCentavos: {
+        mesmaCidade: { type: String, trim: true, default: '' },
+        mesmoEstado: { type: String, trim: true, default: '' },
+        mesmaRegiao: { type: String, trim: true, default: '' },
+        outrasRegioes: { type: String, trim: true, default: '' }
+    }
+}, { _id: false });
 // FIM DA ADIÇÃO: SCHEMA DE ENDEREÇO
 
 const usuarioSchema = new mongoose.Schema({
@@ -181,6 +192,7 @@ const usuarioSchema = new mongoose.Schema({
     fotoPerfil: { type: String, default: "" },
     bio: { type: String, default: "" },
     chavePix: { type: String, trim: true, default: "" },
+    freteLoja: { type: freteLojaSchema, default: () => ({}) },
     // MELHORIA: CPF Único, Telefone e Integrações Futuras
     cpf: { type: String, required: true, unique: true, sparse: true }, 
     telefone: { type: String, default: "" },
@@ -371,6 +383,8 @@ const pedidoSchema = new mongoose.Schema({
     idCliente: { type: String, required: true },
     nomeCliente: { type: String },
     valorTotal: { type: Number },
+    valorProduto: { type: Number, default: null },
+    valorFrete: { type: Number, default: 0 },
     quantidade: { type: Number, default: 1 },
     opcaoSelecionada: { type: String, default: null },
     opcoesSelecionadas: { type: [opcaoPedidoSchema], default: [] },
@@ -403,7 +417,8 @@ const itemCheckoutSchema = new mongoose.Schema({
     idLoja: { type: String, required: true },
     nomeLoja: { type: String, required: true },
     precoUnitarioCentavos: { type: String, required: true },
-    subtotalCentavos: { type: String, required: true }
+    subtotalCentavos: { type: String, required: true },
+    freteCentavos: { type: String, default: '0' }
 }, { _id: false });
 
 const checkoutPagamentoSchema = new mongoose.Schema({
@@ -412,6 +427,8 @@ const checkoutPagamentoSchema = new mongoose.Schema({
     idCliente: { type: String, required: true },
     itens: { type: [itemCheckoutSchema], required: true },
     valorTotalCentavos: { type: String, required: true },
+    valorProdutosCentavos: { type: String, default: '0' },
+    valorFreteCentavos: { type: String, default: '0' },
     enderecoEntrega: { type: enderecoEntregaSchema, required: true },
     status: { type: String, default: 'aguardando_pagamento' },
     dataCriacao: { type: Date, default: Date.now }
@@ -469,6 +486,221 @@ const centavosParaDecimal = (centavos) => {
     const fracao = (centavos % 100n).toString().padStart(2, '0');
     return `${reais}.${fracao}`;
 };
+
+function calcularRepassePedidoCentavos(pedido) {
+    const totalCentavos = valorParaCentavos(String(pedido.valorTotal ?? '0'));
+    const freteCentavos = valorParaCentavos(String(pedido.valorFrete ?? '0'));
+    const produtosCentavos = pedido.valorProduto == null
+        ? totalCentavos - freteCentavos
+        : valorParaCentavos(String(pedido.valorProduto));
+    if (produtosCentavos < 0n || produtosCentavos + freteCentavos !== totalCentavos) {
+        throw new Error('Os valores de produto, frete e total do pedido não correspondem.');
+    }
+    const percentualLoja = 100n - BigInt(TAXA_COMISSAO_PERCENTUAL);
+    const liquidoProdutoCentavos = (produtosCentavos * percentualLoja + 50n) / 100n;
+    // A tarifa regional é repassada integralmente à loja; a comissão incide nos produtos.
+    return liquidoProdutoCentavos + freteCentavos;
+}
+
+const REGIAO_POR_UF = {
+    AC: 'Norte', AM: 'Norte', AP: 'Norte', PA: 'Norte', RO: 'Norte', RR: 'Norte', TO: 'Norte',
+    AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste', PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+    DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+    ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+    PR: 'Sul', RS: 'Sul', SC: 'Sul'
+};
+
+function normalizarCep(cep) {
+    const cepNormalizado = String(cep || '').replace(/\D/g, '');
+    if (!/^\d{8}$/.test(cepNormalizado)) {
+        const erro = new Error('Informe um CEP válido com 8 dígitos para calcular o frete.');
+        erro.statusCode = 400;
+        throw erro;
+    }
+    return cepNormalizado;
+}
+
+async function consultarLocalidadePorCep(cep) {
+    const cepNormalizado = normalizarCep(cep);
+    const controlador = new AbortController();
+    const timeout = setTimeout(() => controlador.abort(), 7000);
+    try {
+        const resposta = await fetch(`https://viacep.com.br/ws/${cepNormalizado}/json/`, {
+            signal: controlador.signal
+        });
+        if (!resposta.ok) throw new Error(`ViaCEP respondeu HTTP ${resposta.status}.`);
+        const dados = await resposta.json();
+        const uf = String(dados.uf || '').trim().toUpperCase();
+        const cidade = String(dados.localidade || '').trim();
+        if (dados.erro || !cidade || !REGIAO_POR_UF[uf]) {
+            const erro = new Error('Não foi possível localizar esse CEP para calcular o frete. Confira o CEP.');
+            erro.statusCode = 400;
+            throw erro;
+        }
+        return { cep: cepNormalizado, cidade, uf, regiao: REGIAO_POR_UF[uf] };
+    } catch (erro) {
+        if (erro.statusCode) throw erro;
+        const erroCep = new Error('Não foi possível consultar o CEP agora. Tente novamente em instantes.');
+        erroCep.statusCode = 502;
+        throw erroCep;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+function normalizarNomeLocalidade(valor) {
+    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR');
+}
+
+function selecionarFaixaFrete(freteLoja, origem, destino) {
+    if (origem.uf === destino.uf && normalizarNomeLocalidade(origem.cidade) === normalizarNomeLocalidade(destino.cidade)) {
+        return 'mesmaCidade';
+    }
+    if (origem.uf === destino.uf) return 'mesmoEstado';
+    if (origem.regiao === destino.regiao) return 'mesmaRegiao';
+    return 'outrasRegioes';
+}
+
+async function calcularFreteCarrinho(linhasRecebidas, cepDestino) {
+    if (!Array.isArray(linhasRecebidas) || !linhasRecebidas.length || linhasRecebidas.length > 50) {
+        const erro = new Error('Carrinho inválido: informe de 1 a 50 produtos.');
+        erro.statusCode = 400;
+        throw erro;
+    }
+    const linhasNormalizadas = linhasRecebidas.map((linha) => ({
+        idProduto: String(linha?.idProduto || linha?._id || linha?.id || '').trim(),
+        quantidade: linha?.quantidade == null ? 1 : Number(linha.quantidade),
+        opcaoSelecionada: linha?.opcaoSelecionada == null ? null : String(linha.opcaoSelecionada).slice(0, 120)
+    }));
+    if (linhasNormalizadas.some((linha) =>
+        !mongoose.Types.ObjectId.isValid(linha.idProduto) ||
+        !Number.isInteger(linha.quantidade) || linha.quantidade < 1 || linha.quantidade > 99
+    )) {
+        const erro = new Error('Um ou mais produtos ou quantidades do carrinho são inválidos.');
+        erro.statusCode = 400;
+        throw erro;
+    }
+
+    const destino = await consultarLocalidadePorCep(cepDestino);
+    const idsProdutos = [...new Set(linhasNormalizadas.map((linha) => linha.idProduto))];
+    const produtos = await Produto.find({ _id: { $in: idsProdutos } });
+    const produtosPorId = new Map(produtos.map((produto) => [produto._id.toString(), produto]));
+    const linhas = [];
+    const lojasPorId = new Map();
+
+    for (const entrada of linhasNormalizadas) {
+        const produto = produtosPorId.get(entrada.idProduto);
+        if (!produto) {
+            const erro = new Error(`Produto ${entrada.idProduto} não encontrado.`);
+            erro.statusCode = 404;
+            throw erro;
+        }
+
+        let loja = null;
+        if (produto.idLoja && mongoose.Types.ObjectId.isValid(String(produto.idLoja))) {
+            loja = await Usuario.findOne({ _id: String(produto.idLoja), tipo: 'loja' });
+        }
+        if (!loja && produto.nomeLoja) {
+            loja = await Usuario.findOne({ nome: String(produto.nomeLoja).trim(), tipo: 'loja' })
+                .collation({ locale: 'pt', strength: 2 });
+        }
+        if (!loja) {
+            const erro = new Error(`Não foi possível identificar a loja do produto "${produto.titulo}".`);
+            erro.statusCode = 409;
+            throw erro;
+        }
+
+        const preco = produto.preco && produto.preco.$numberDecimal != null ? produto.preco.$numberDecimal : produto.preco;
+        let precoUnitarioCentavos;
+        try { precoUnitarioCentavos = valorParaCentavos(preco); }
+        catch (erroPreco) {
+            const erro = new Error(`O preço do produto "${produto.titulo}" é inválido.`);
+            erro.statusCode = 400;
+            throw erro;
+        }
+        if (precoUnitarioCentavos <= 0n) {
+            const erro = new Error(`O preço do produto "${produto.titulo}" precisa ser maior que zero.`);
+            erro.statusCode = 400;
+            throw erro;
+        }
+
+        const subtotalCentavos = precoUnitarioCentavos * BigInt(entrada.quantidade);
+        const idLoja = loja._id.toString();
+        lojasPorId.set(idLoja, loja);
+        linhas.push({
+            idProduto: produto._id.toString(),
+            nomeProduto: String(produto.titulo || 'Produto').slice(0, 250),
+            quantidade: entrada.quantidade,
+            opcaoSelecionada: entrada.opcaoSelecionada,
+            idLoja,
+            nomeLoja: String(loja.nome || produto.nomeLoja || 'Loja Parceira').slice(0, 120),
+            precoUnitarioCentavos,
+            subtotalCentavos,
+            freteCentavos: 0n
+        });
+    }
+
+    const gruposPorLoja = new Map();
+    linhas.forEach((linha, indice) => {
+        let grupo = gruposPorLoja.get(linha.idLoja);
+        if (!grupo) {
+            grupo = { idLoja: linha.idLoja, nomeLoja: linha.nomeLoja, indices: [], subtotalCentavos: 0n };
+            gruposPorLoja.set(linha.idLoja, grupo);
+        }
+        grupo.indices.push(indice);
+        grupo.subtotalCentavos += linha.subtotalCentavos;
+    });
+
+    const fretes = [];
+    let freteTotalCentavos = 0n;
+    for (const grupo of gruposPorLoja.values()) {
+        const loja = lojasPorId.get(grupo.idLoja);
+        const freteConfigurado = loja?.freteLoja;
+        const cepOrigem = String(freteConfigurado?.cepOrigem || '').trim();
+        const ufOrigem = String(freteConfigurado?.ufOrigem || '').trim().toUpperCase();
+        const cidadeOrigem = String(freteConfigurado?.cidadeOrigem || '').trim();
+        if (!cepOrigem || !ufOrigem || !cidadeOrigem || !freteConfigurado?.tarifasCentavos) {
+            const erro = new Error(`A loja "${grupo.nomeLoja}" ainda não configurou as tarifas de entrega. Peça à loja para configurar o frete no perfil.`);
+            erro.statusCode = 409;
+            throw erro;
+        }
+
+        const origem = { cep: cepOrigem, cidade: cidadeOrigem, uf: ufOrigem, regiao: REGIAO_POR_UF[ufOrigem] };
+        if (!origem.regiao) {
+            const erro = new Error(`A loja "${grupo.nomeLoja}" precisa revisar o CEP de origem do frete.`);
+            erro.statusCode = 409;
+            throw erro;
+        }
+        const faixa = selecionarFaixaFrete(freteConfigurado, origem, destino);
+        const valorTarifa = String(freteConfigurado.tarifasCentavos[faixa] ?? '');
+        if (!/^\d+$/.test(valorTarifa)) {
+            const erro = new Error(`A loja "${grupo.nomeLoja}" não configurou uma tarifa válida para esta região.`);
+            erro.statusCode = 409;
+            throw erro;
+        }
+        const valorFreteCentavos = BigInt(valorTarifa);
+        let freteAlocadoCentavos = 0n;
+        grupo.indices.forEach((indice, posicao) => {
+            const linha = linhas[indice];
+            const alocacao = posicao === grupo.indices.length - 1
+                ? valorFreteCentavos - freteAlocadoCentavos
+                : (valorFreteCentavos * linha.subtotalCentavos) / grupo.subtotalCentavos;
+            linha.freteCentavos = alocacao;
+            freteAlocadoCentavos += alocacao;
+        });
+        freteTotalCentavos += valorFreteCentavos;
+        fretes.push({ idLoja: grupo.idLoja, nomeLoja: grupo.nomeLoja, faixa, valorFreteCentavos });
+    }
+
+    const valorProdutosCentavos = linhas.reduce((soma, linha) => soma + linha.subtotalCentavos, 0n);
+    const totalCentavos = valorProdutosCentavos + freteTotalCentavos;
+    if (totalCentavos <= 0n || totalCentavos > BigInt(Number.MAX_SAFE_INTEGER)) {
+        const erro = new Error('O total do carrinho com frete é inválido.');
+        erro.statusCode = 400;
+        throw erro;
+    }
+    return { destino, linhas, fretes, valorProdutosCentavos, freteTotalCentavos, totalCentavos };
+}
 
 const valorParaMillesimos = (valor) => {
     const texto = String(valor ?? '').trim();
@@ -1062,6 +1294,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                 fotoPerfil: user.fotoPerfil,
                 bio: user.bio
             };
+            if (user.tipo === 'loja') usuarioResposta.freteLoja = user.freteLoja;
             if (isAdmin) usuarioResposta.isAdmin = true;
             res.json({ token, user: usuarioResposta });
         } else {
@@ -1202,7 +1435,7 @@ app.get('/api/loja/:nome', async (req, res) => {
         const loja = await Usuario.findOne({
             nome: nomeBusca,
             tipo: 'loja'
-        }).collation({ locale: 'pt', strength: 1 }).select('-senha -chavePix');
+        }).collation({ locale: 'pt', strength: 1 }).select('-senha -chavePix -freteLoja');
 
         const produtos = await Produto.find({
             nomeLoja: nomeBusca
@@ -1236,6 +1469,40 @@ app.put('/api/loja/atualizar-completo', verificarToken, async (req, res) => {
         const camposAtualizados = { nome: novoNome, fotoPerfil, bio };
         if (Object.prototype.hasOwnProperty.call(req.body, 'chavePix')) {
             camposAtualizados.chavePix = String(chavePix || '').trim();
+        }
+
+        if (req.body.freteLoja !== undefined) {
+            if (String(req.user.tipo || '').toLowerCase() !== 'loja') {
+                return res.status(403).json({ error: 'Somente uma loja pode configurar suas tarifas de entrega.' });
+            }
+            const freteRecebido = req.body.freteLoja || {};
+            let cepOrigem;
+            try { cepOrigem = normalizarCep(freteRecebido.cepOrigem); }
+            catch (erroCepOrigem) { return res.status(400).json({ error: erroCepOrigem.message }); }
+            const camposTarifa = ['mesmaCidade', 'mesmoEstado', 'mesmaRegiao', 'outrasRegioes'];
+            const tarifasCentavos = {};
+            try {
+                for (const campo of camposTarifa) {
+                    const valorTarifa = String(freteRecebido.tarifas?.[campo] ?? '').trim().replace(',', '.');
+                    tarifasCentavos[campo] = valorParaCentavos(valorTarifa).toString();
+                }
+            } catch (erroTarifa) {
+                return res.status(400).json({ error: 'Preencha as quatro tarifas de frete com valores válidos, inclusive quando alguma região for grátis (R$ 0,00).' });
+            }
+
+            let localidadeOrigem;
+            try {
+                localidadeOrigem = await consultarLocalidadePorCep(cepOrigem);
+            } catch (erroCep) {
+                return res.status(erroCep.statusCode || 400).json({ error: erroCep.message });
+            }
+
+            camposAtualizados.freteLoja = {
+                cepOrigem: localidadeOrigem.cep,
+                cidadeOrigem: localidadeOrigem.cidade,
+                ufOrigem: localidadeOrigem.uf,
+                tarifasCentavos
+            };
         }
 
         const userAtualizado = await Usuario.findOneAndUpdate(
@@ -1891,7 +2158,7 @@ app.get('/api/admin/financeiro/pedidos', verificarToken, exigirPermissao(['admin
                 }
             ]
         })
-            .select('_id idPagamento idLoja lojaDona idCliente nomeCliente idProduto nomeProduto quantidade valorTotal statusEntrega dataCompra recebidoPeloCliente dataRecebimentoCliente statusRecebimento statusRepasse dataRepasse')
+            .select('_id idPagamento idLoja lojaDona idCliente nomeCliente idProduto nomeProduto quantidade valorTotal valorProduto valorFrete statusEntrega dataCompra recebidoPeloCliente dataRecebimentoCliente statusRecebimento statusRepasse dataRepasse')
             .sort({ dataCompra: -1 })
             .lean();
 
@@ -2119,6 +2386,36 @@ app.delete('/api/produtos/:id', verificarToken, exigirPermissao(['loja', 'admin'
 // ==========================================
 // ROTA UNIFICADA DE PAGAMENTO (BRICKS + METADATA)
 // ==========================================
+app.post('/api/frete/cotacao', verificarToken, async (req, res) => {
+    try {
+        const linhasRecebidas = Array.isArray(req.body.itens) && req.body.itens.length
+            ? req.body.itens
+            : (req.body.idProduto ? [{ idProduto: req.body.idProduto, quantidade: 1 }] : []);
+        const cotacao = await calcularFreteCarrinho(linhasRecebidas, req.body.enderecoEntrega?.cep);
+        return res.json({
+            destino: { cidade: cotacao.destino.cidade, uf: cotacao.destino.uf },
+            valorProdutosCentavos: cotacao.valorProdutosCentavos.toString(),
+            valorFreteCentavos: cotacao.freteTotalCentavos.toString(),
+            valorTotalCentavos: cotacao.totalCentavos.toString(),
+            fretes: cotacao.fretes.map((frete) => ({
+                idLoja: frete.idLoja,
+                nomeLoja: frete.nomeLoja,
+                faixa: frete.faixa,
+                valorCentavos: frete.valorFreteCentavos.toString()
+            })),
+            itens: cotacao.linhas.map((linha) => ({
+                idProduto: linha.idProduto,
+                nomeProduto: linha.nomeProduto,
+                quantidade: linha.quantidade,
+                subtotalCentavos: linha.subtotalCentavos.toString()
+            }))
+        });
+    } catch (erro) {
+        console.error('Erro ao calcular cotação regional de frete:', erro.message);
+        return res.status(erro.statusCode || 500).json({ error: erro.message || 'Não foi possível calcular o frete.' });
+    }
+});
+
 app.post('/api/pagar', async (req, res) => {
     try {
         console.log("\n--- [API PAGAR] Nova requisição recebida do Brick ---");
@@ -2149,80 +2446,44 @@ app.post('/api/pagar', async (req, res) => {
         const linhasRecebidas = Array.isArray(itensRecebidos) && itensRecebidos.length
             ? itensRecebidos
             : (idProduto ? [{ idProduto, quantidade: 1 }] : []);
-        if (!linhasRecebidas.length || linhasRecebidas.length > 50) {
-            return res.status(400).json({ error: 'Carrinho inválido: informe de 1 a 50 produtos.' });
-        }
         if (linhasRecebidas.some((linha) => !linha || typeof linha !== 'object')) {
             return res.status(400).json({ error: 'O carrinho contém uma linha inválida.' });
         }
 
-        const linhasNormalizadas = linhasRecebidas.map((linha) => ({
-            idProduto: String(linha.idProduto || linha._id || linha.id || '').trim(),
-            quantidade: linha.quantidade == null ? 1 : Number(linha.quantidade),
-            opcaoSelecionada: linha.opcaoSelecionada == null ? null : String(linha.opcaoSelecionada).slice(0, 120)
+        let cotacao;
+        try { cotacao = await calcularFreteCarrinho(linhasRecebidas, enderecoNormalizado.cep); }
+        catch (erroFrete) {
+            return res.status(erroFrete.statusCode || 500).json({ error: erroFrete.message || 'Não foi possível calcular o frete.' });
+        }
+        const valorTotalCentavos = cotacao.totalCentavos;
+        const valorProdutosCentavos = cotacao.valorProdutosCentavos;
+        const freteTotalCentavos = cotacao.freteTotalCentavos;
+        enderecoNormalizado.cidade = `${cotacao.destino.cidade} - ${cotacao.destino.uf}`;
+        const itensParaMercadoPago = cotacao.linhas.map((linha) => ({
+            id: linha.idProduto,
+            title: linha.nomeProduto,
+            quantity: linha.quantidade,
+            unit_price: Number(centavosParaDecimal(linha.precoUnitarioCentavos))
         }));
-        if (linhasNormalizadas.some((linha) =>
-            !mongoose.Types.ObjectId.isValid(linha.idProduto) ||
-            !Number.isInteger(linha.quantidade) || linha.quantidade < 1 || linha.quantidade > 99
-        )) {
-            return res.status(400).json({ error: 'Um ou mais produtos ou quantidades do carrinho são inválidos.' });
-        }
-
-        const idsProdutos = [...new Set(linhasNormalizadas.map((linha) => linha.idProduto))];
-        const produtosEncontrados = await Produto.find({ _id: { $in: idsProdutos } });
-        const produtosPorId = new Map(produtosEncontrados.map((produto) => [produto._id.toString(), produto]));
-        let valorTotalCentavos = 0n;
-        const itensParaMercadoPago = [];
-        const itensParaMetadata = [];
-
-        // O backend consulta os preços atuais no MongoDB; o total do navegador
-        // nunca é usado como fonte de verdade para a cobrança.
-        for (const linha of linhasNormalizadas) {
-            const produto = produtosPorId.get(linha.idProduto);
-            if (!produto) {
-                return res.status(404).json({ error: `Produto ${linha.idProduto} não encontrado.` });
-            }
-
-            let loja = null;
-            if (produto.idLoja && mongoose.Types.ObjectId.isValid(String(produto.idLoja))) {
-                loja = await Usuario.findOne({ _id: String(produto.idLoja), tipo: 'loja' });
-            }
-            // Produtos antigos podem conter somente o nome da loja.
-            if (!loja && produto.nomeLoja) {
-                loja = await Usuario.findOne({ nome: String(produto.nomeLoja).trim(), tipo: 'loja' })
-                    .collation({ locale: 'pt', strength: 2 });
-            }
-            if (!loja) {
-                return res.status(409).json({ error: `Não foi possível identificar a loja do produto "${produto.titulo}". O pagamento não foi criado.` });
-            }
-
-            const preco = produto.preco && produto.preco.$numberDecimal != null
-                ? produto.preco.$numberDecimal
-                : produto.preco;
-            const precoUnitarioCentavos = valorParaCentavos(preco);
-            if (precoUnitarioCentavos <= 0n) {
-                return res.status(400).json({ error: `O preço do produto "${produto.titulo}" precisa ser maior que zero.` });
-            }
-            const subtotalCentavos = precoUnitarioCentavos * BigInt(linha.quantidade);
-            valorTotalCentavos += subtotalCentavos;
-
+        if (freteTotalCentavos > 0n) {
             itensParaMercadoPago.push({
-                id: produto._id.toString(),
-                title: String(produto.titulo || 'Produto').slice(0, 250),
-                quantity: linha.quantidade,
-                unit_price: Number(centavosParaDecimal(precoUnitarioCentavos))
-            });
-            itensParaMetadata.push({
-                id_produto: produto._id.toString(),
-                nome_produto: String(produto.titulo || 'Produto').slice(0, 250),
-                quantidade: linha.quantidade,
-                opcao_selecionada: linha.opcaoSelecionada,
-                id_lojista: loja._id.toString(),
-                nome_loja: String(loja.nome || produto.nomeLoja || 'Loja Parceira').slice(0, 120),
-                preco_unitario_centavos: precoUnitarioCentavos.toString(),
-                subtotal_centavos: subtotalCentavos.toString()
+                id: 'frete-entrega',
+                title: 'Frete regional estimado',
+                quantity: 1,
+                unit_price: Number(centavosParaDecimal(freteTotalCentavos))
             });
         }
+        const itensParaMetadata = cotacao.linhas.map((linha) => ({
+            id_produto: linha.idProduto,
+            nome_produto: linha.nomeProduto,
+            quantidade: linha.quantidade,
+            opcao_selecionada: linha.opcaoSelecionada,
+            id_lojista: linha.idLoja,
+            nome_loja: linha.nomeLoja,
+            preco_unitario_centavos: linha.precoUnitarioCentavos.toString(),
+            subtotal_centavos: linha.subtotalCentavos.toString(),
+            frete_centavos: linha.freteCentavos.toString()
+        }));
 
         if (valorTotalCentavos <= 0n || valorTotalCentavos > BigInt(Number.MAX_SAFE_INTEGER)) {
             return res.status(400).json({ error: 'O valor total do carrinho é inválido.' });
@@ -2263,9 +2524,12 @@ app.post('/api/pagar', async (req, res) => {
                 idLoja: item.id_lojista,
                 nomeLoja: item.nome_loja,
                 precoUnitarioCentavos: item.preco_unitario_centavos,
-                subtotalCentavos: item.subtotal_centavos
+                subtotalCentavos: item.subtotal_centavos,
+                freteCentavos: item.frete_centavos
             })),
             valorTotalCentavos: valorTotalCentavos.toString(),
+            valorProdutosCentavos: valorProdutosCentavos.toString(),
+            valorFreteCentavos: freteTotalCentavos.toString(),
             enderecoEntrega: enderecoNormalizado
         });
         dadosDoBrick.external_reference = referenciaCheckout;
@@ -2412,17 +2676,22 @@ app.get('/api/loja/carteira/hoje', verificarToken, exigirPermissao(['loja']), as
                 ]
             }
         })
-            .select('_id nomeProduto quantidade valorTotal dataCompra statusEntrega recebidoPeloCliente statusRepasse')
+            .select('_id nomeProduto quantidade valorTotal valorProduto valorFrete dataCompra statusEntrega recebidoPeloCliente statusRepasse')
             .sort({ dataCompra: -1 })
             .lean();
 
         const vendas = pedidosHoje.map((pedido) => {
             let valorBrutoCentavos = null;
+            let valorProdutoCentavos = null;
+            let valorFreteCentavos = null;
             let valorLiquidoEstimadoCentavos = null;
             try {
                 valorBrutoCentavos = valorParaCentavos(String(pedido.valorTotal));
-                const percentualLoja = 100n - BigInt(TAXA_COMISSAO_PERCENTUAL);
-                valorLiquidoEstimadoCentavos = (valorBrutoCentavos * percentualLoja + 50n) / 100n;
+                valorFreteCentavos = valorParaCentavos(String(pedido.valorFrete ?? '0'));
+                valorProdutoCentavos = pedido.valorProduto == null
+                    ? valorBrutoCentavos - valorFreteCentavos
+                    : valorParaCentavos(String(pedido.valorProduto));
+                valorLiquidoEstimadoCentavos = calcularRepassePedidoCentavos(pedido);
             } catch (erroValor) {
                 console.warn(`Valor inválido no pedido ${pedido._id} ao montar a carteira diária.`);
             }
@@ -2432,6 +2701,8 @@ app.get('/api/loja/carteira/hoje', verificarToken, exigirPermissao(['loja']), as
                 produto: String(pedido.nomeProduto || 'Produto'),
                 quantidade: Number(pedido.quantidade || 1),
                 valorBrutoCentavos: valorBrutoCentavos?.toString() ?? null,
+                valorProdutoCentavos: valorProdutoCentavos?.toString() ?? null,
+                valorFreteCentavos: valorFreteCentavos?.toString() ?? null,
                 valorLiquidoEstimadoCentavos: valorLiquidoEstimadoCentavos?.toString() ?? null,
                 dataCompra: pedido.dataCompra,
                 statusEntrega: String(pedido.statusEntrega || 'Aguardando Envio'),
@@ -2560,9 +2831,7 @@ async function notificarLojaRecebimentoConfirmado(pedido) {
         let valorLiquido = null;
         if (Number.isFinite(valorBruto) && valorBruto >= 0) {
             try {
-                const brutoCentavos = valorParaCentavos(String(pedido.valorTotal));
-                const percentualRepasse = 100n - BigInt(TAXA_COMISSAO_PERCENTUAL);
-                const liquidoCentavos = (brutoCentavos * percentualRepasse + 50n) / 100n;
+                const liquidoCentavos = calcularRepassePedidoCentavos(pedido);
                 valorLiquido = Number(centavosParaDecimal(liquidoCentavos));
             } catch (erroValor) {
                 valorLiquido = null;
@@ -2712,7 +2981,8 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
             opcao_selecionada: item.opcaoSelecionada,
             id_lojista: item.idLoja,
             nome_loja: item.nomeLoja,
-            subtotal_centavos: item.subtotalCentavos
+            subtotal_centavos: item.subtotalCentavos,
+            frete_centavos: item.freteCentavos || '0'
         })) || metadata.itens_carrinho;
         if (typeof linhasMetadata === 'string') {
             try { linhasMetadata = JSON.parse(linhasMetadata); } catch (erro) { linhasMetadata = null; }
@@ -2727,7 +2997,8 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
                 nome_produto: dadosPagamento.description || 'Produto',
                 id_lojista: String(metadata.id_lojista || ''),
                 nome_loja: String(metadata.nome_loja || ''),
-                subtotal_centavos: valorBrutoCentavos.toString()
+                subtotal_centavos: valorBrutoCentavos.toString(),
+                frete_centavos: '0'
             }];
         }
         if (!Array.isArray(linhasMetadata) || linhasMetadata.length === 0) {
@@ -2750,6 +3021,10 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
             if (!/^\d+$/.test(subtotalTexto)) {
                 throw new Error(`Subtotal ausente ou inválido na linha ${indice + 1} do pagamento ${idPagamento}.`);
             }
+            const freteTexto = linha.frete_centavos == null ? '0' : String(linha.frete_centavos);
+            if (!/^\d+$/.test(freteTexto)) {
+                throw new Error(`Frete ausente ou inválido na linha ${indice + 1} do pagamento ${idPagamento}.`);
+            }
             return {
                 indice,
                 idProduto: idProdutoLinha,
@@ -2758,10 +3033,11 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
                 nomeProduto: String(linha.nome_produto || linha.nomeProduto || '').trim(),
                 idLoja: String(linha.id_lojista || linha.idLoja || '').trim(),
                 nomeLoja: String(linha.nome_loja || linha.nomeLoja || '').trim(),
-                subtotalCentavos: BigInt(subtotalTexto)
+                subtotalCentavos: BigInt(subtotalTexto),
+                freteCentavos: BigInt(freteTexto)
             };
         });
-        const totalMetadataCentavos = linhasPedido.reduce((soma, linha) => soma + linha.subtotalCentavos, 0n);
+        const totalMetadataCentavos = linhasPedido.reduce((soma, linha) => soma + linha.subtotalCentavos + linha.freteCentavos, 0n);
         if (totalMetadataCentavos !== valorBrutoCentavos) {
             throw new Error(`A soma dos itens não corresponde ao valor aprovado no pagamento ${idPagamento}.`);
         }
@@ -2785,6 +3061,7 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
                     ...linha,
                     quantidade: 0,
                     subtotalCentavos: 0n,
+                    freteCentavos: 0n,
                     opcoesPorValor: new Map()
                 };
                 grupos.set(chave, grupo);
@@ -2792,6 +3069,7 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
 
             grupo.quantidade += linha.quantidade;
             grupo.subtotalCentavos += linha.subtotalCentavos;
+            grupo.freteCentavos += linha.freteCentavos;
             const opcao = linha.opcaoSelecionada == null || !String(linha.opcaoSelecionada).trim()
                 ? null
                 : String(linha.opcaoSelecionada).trim();
@@ -2870,7 +3148,9 @@ app.post('/api/webhook', express.urlencoded({ extended: true }), express.json(),
                         quantidade: linha.quantidade,
                         opcaoSelecionada: linha.opcaoSelecionada,
                         opcoesSelecionadas: linha.opcoesSelecionadas,
-                        valorTotal: Number(centavosParaDecimal(linha.subtotalCentavos)),
+                        valorTotal: Number(centavosParaDecimal(linha.subtotalCentavos + linha.freteCentavos)),
+                        valorProduto: Number(centavosParaDecimal(linha.subtotalCentavos)),
+                        valorFrete: Number(centavosParaDecimal(linha.freteCentavos)),
                         imagemProduto: imagemParaSalvar,
                         enderecoEntrega,
                         statusEntrega: 'Aguardando Envio',

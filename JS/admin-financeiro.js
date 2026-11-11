@@ -63,10 +63,16 @@ function obterValorBrutoValido(pedido) {
     return Number.isFinite(valor) && valor >= 0 ? valor : null;
 }
 
-function calcularValorLiquido(valorBruto) {
-    const brutoCentavos = Math.round(valorBruto * 100);
-    if (!Number.isSafeInteger(brutoCentavos) || brutoCentavos < 0) return null;
-    const liquidoCentavos = (BigInt(brutoCentavos) * BigInt(PERCENTUAL_REPASSE_LOJISTA) + 50n) / 100n;
+function calcularValorLiquido(pedido) {
+    const totalCentavos = Math.round(Number(pedido.valorTotal) * 100);
+    const freteCentavos = Math.round(Number(pedido.valorFrete || 0) * 100);
+    const produtoCentavos = pedido.valorProduto === null || pedido.valorProduto === undefined || pedido.valorProduto === ''
+        ? totalCentavos - freteCentavos
+        : Math.round(Number(pedido.valorProduto) * 100);
+    if (!Number.isSafeInteger(totalCentavos) || !Number.isSafeInteger(freteCentavos)
+        || !Number.isSafeInteger(produtoCentavos) || produtoCentavos < 0
+        || freteCentavos < 0 || produtoCentavos + freteCentavos !== totalCentavos) return null;
+    const liquidoCentavos = (BigInt(produtoCentavos) * BigInt(PERCENTUAL_REPASSE_LOJISTA) + 50n) / 100n + BigInt(freteCentavos);
     return Number(liquidoCentavos) / 100;
 }
 
@@ -91,7 +97,7 @@ function agruparPedidosPorLoja(pedidos) {
         }
 
         const valorBruto = obterValorBrutoValido(pedido);
-        const valorLiquido = valorBruto === null ? null : calcularValorLiquido(valorBruto);
+        const valorLiquido = valorBruto === null ? null : calcularValorLiquido(pedido);
         if (valorLiquido !== null && pedido.recebidoPeloCliente === true) {
             grupo.totalLiquidoCentavos += Math.round(valorLiquido * 100);
         }
@@ -130,6 +136,10 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                 const valorLiquidoTexto = pedido.valorLiquido === null
                     ? 'Valor líquido indisponível'
                     : formatadorBRL.format(pedido.valorLiquido);
+                const valorFrete = Number(pedido.valorFrete || 0);
+                const detalheFrete = Number.isFinite(valorFrete) && valorFrete > 0
+                    ? `<small class="detalhe-valores-pedido">Frete integral para a loja: ${escapar(formatadorBRL.format(valorFrete))}</small>`
+                    : '';
                 const tituloBotaoRepasse = 'Registrar que a transferência manual foi concluída';
                 const recebimentoConfirmado = pedido.recebidoPeloCliente === true;
                 const statusEntrega = String(pedido.statusEntrega || 'Aguardando Envio');
@@ -157,6 +167,7 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                         </div>
                         <div class="venda-repasse">
                             <strong class="valor-liquido">${escaparHTML(valorLiquidoTexto)}</strong>
+                            ${detalheFrete}
                             ${historico ? detalheRepasse : `<span class="status-repasse"><i class="fas fa-circle-info" aria-hidden="true"></i> Repasse manual · confirmar fora da plataforma</span>${detalheRepasse}`}
                             <small>Pedido #${idPedido}</small>
                         </div>

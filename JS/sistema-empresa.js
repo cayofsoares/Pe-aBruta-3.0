@@ -99,11 +99,49 @@ function preencherFormularioPerfil() {
     const campoChavePix = document.getElementById('perfChavePix');
     campoChavePix.value = usuarioLoja.chavePix || '';
     campoChavePix.required = usuarioLoja.tipo !== 'admin' && usuarioLoja.isAdmin !== true;
+
+    const cartaoFrete = document.querySelector('.frete-config-loja');
+    if (cartaoFrete) cartaoFrete.style.display = usuarioLoja.tipo === 'loja' ? '' : 'none';
+    const configuracaoFrete = usuarioLoja.freteLoja || {};
+    document.getElementById('freteCepOrigem').value = configuracaoFrete.cepOrigem || '';
+    const tarifas = configuracaoFrete.tarifasCentavos || {};
+    const preencherTarifa = (id, centavos) => {
+        const valor = String(centavos ?? '');
+        if (!/^\d+$/.test(valor)) {
+            document.getElementById(id).value = '';
+            return;
+        }
+        const numero = BigInt(valor);
+        document.getElementById(id).value = `${numero / 100n}.${String(numero % 100n).padStart(2, '0')}`;
+    };
+    preencherTarifa('freteMesmaCidade', tarifas.mesmaCidade);
+    preencherTarifa('freteMesmoEstado', tarifas.mesmoEstado);
+    preencherTarifa('freteMesmaRegiao', tarifas.mesmaRegiao);
+    preencherTarifa('freteOutrasRegioes', tarifas.outrasRegioes);
 }
 
 async function atualizarPerfilAPI(e) {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarPerfil');
+    const valoresFrete = {
+        cepOrigem: document.getElementById('freteCepOrigem').value.trim(),
+        tarifas: {
+            mesmaCidade: document.getElementById('freteMesmaCidade').value.trim(),
+            mesmoEstado: document.getElementById('freteMesmoEstado').value.trim(),
+            mesmaRegiao: document.getElementById('freteMesmaRegiao').value.trim(),
+            outrasRegioes: document.getElementById('freteOutrasRegioes').value.trim()
+        }
+    };
+    const valoresTarifas = Object.values(valoresFrete.tarifas);
+    const deveSalvarFrete = Boolean(valoresFrete.cepOrigem || valoresTarifas.some(Boolean));
+    if (deveSalvarFrete) {
+        const cepNormalizado = valoresFrete.cepOrigem.replace(/\D/g, '');
+        if (cepNormalizado.length !== 8 || valoresTarifas.some((valor) => valor === '' || !/^\d+(?:[.,]\d{1,2})?$/.test(valor))) {
+            showToast('Informe o CEP de origem e as quatro tarifas regionais. Use R$ 0,00 para uma região sem cobrança.', 'error');
+            return;
+        }
+        valoresFrete.cepOrigem = cepNormalizado;
+    }
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSANDO...';
 
@@ -114,6 +152,7 @@ async function atualizarPerfilAPI(e) {
         fotoPerfil: document.getElementById('perfLogo').value,
         chavePix: document.getElementById('perfChavePix').value.trim()
     };
+    if (deveSalvarFrete && usuarioLoja.tipo === 'loja') payload.freteLoja = valoresFrete;
 
     try {
         const res = await apiFetch(`${API_URL}/loja/atualizar-completo`, {
@@ -121,12 +160,14 @@ async function atualizarPerfilAPI(e) {
             headers: apiHeaders({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }),
             body: JSON.stringify(payload)
         });
+        const dadosResposta = await res.json().catch(() => ({}));
 
         if(res.ok) {
             usuarioLoja.nome = payload.novoNome;
             usuarioLoja.bio = payload.bio;
             usuarioLoja.fotoPerfil = payload.fotoPerfil;
             usuarioLoja.chavePix = payload.chavePix;
+            if (dadosResposta.user?.freteLoja) usuarioLoja.freteLoja = dadosResposta.user.freteLoja;
             
             sessionStorage.setItem('usuario', JSON.stringify({ token: token, user: usuarioLoja }));
             
@@ -145,8 +186,7 @@ async function atualizarPerfilAPI(e) {
             document.getElementById('headerLojaNome').textContent = payload.novoNome.toUpperCase();
             showToast("Perfil atualizado com sucesso. Faça login novamente se houver falhas.", "success");
         } else {
-            const err = await res.json();
-            showToast(err.error || "Erro ao atualizar dados", "error");
+            showToast(dadosResposta.error || "Erro ao atualizar dados", "error");
         }
     } catch (err) {
         showToast("Erro de conexão ao atualizar perfil.", "error");

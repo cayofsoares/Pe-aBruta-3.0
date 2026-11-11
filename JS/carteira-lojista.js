@@ -54,6 +54,9 @@ function desenharVendas(vendas) {
             ? `${escaparHTMLCarteira(venda.statusEntrega)} · aguardando confirmação do cliente`
             : 'Recebimento confirmado · aguardando atualização do repasse';
         const quantidade = Number(venda.quantidade || 1);
+        const valorFrete = venda.valorFreteCentavos && Number(venda.valorFreteCentavos) > 0
+            ? `<span>Frete: ${escaparHTMLCarteira(valorCentavosParaBRL(venda.valorFreteCentavos))} (integral à loja)</span>`
+            : '';
         return `
             <article class="wallet-sale">
                 <div>
@@ -62,6 +65,7 @@ function desenharVendas(vendas) {
                         <span>${quantidade} ${quantidade === 1 ? 'unidade' : 'unidades'}</span>
                         <span>${escaparHTMLCarteira(formatarDataVenda(venda.dataCompra))}</span>
                         <span>${situacao}</span>
+                        ${valorFrete}
                     </div>
                 </div>
                 <div class="wallet-sale-value">

@@ -83,6 +83,9 @@ function renderizarPedido(pedido) {
     const ehCompra = String(pedido.idCliente || '') === idDoUsuarioLogado;
     const quantidade = obterQuantidadePedido(pedido);
     const valorTotalPedido = obterValorTotalPedido(pedido, quantidade);
+    const valorFretePedido = Number(pedido.valorFrete || 0);
+    const valorProdutoPedido = Number(pedido.valorProduto ?? (valorTotalPedido - valorFretePedido));
+    const possuiDetalheFrete = pedido.valorProduto !== null && pedido.valorProduto !== undefined;
     const endereco = formatarEndereco(pedido.enderecoEntrega || {});
     const statusAtual = pedido.statusEntrega || 'Aguardando Envio';
     const opcoesStatus = [...statusEntregaPermitidos];
@@ -155,6 +158,7 @@ function renderizarPedido(pedido) {
                     <h3 style="margin:0 0 6px;font-size:16px;">${nomeProduto}</h3>
                     ${badgeQuantidade}
                     <strong style="display:block;color:#fff;margin-top:${badgeQuantidade ? '8px' : '0'};">${escaparHTML(formatarValor(valorTotalPedido))}</strong>
+                    <small style="display:block;margin-top:4px;color:#aaa;">${possuiDetalheFrete ? `Produto: ${escaparHTML(formatarValor(valorProdutoPedido))}${valorFretePedido > 0 ? ` · Frete: ${escaparHTML(formatarValor(valorFretePedido))}` : ' · Frete grátis'}` : 'Frete não discriminado neste pedido'}</small>
                     <p style="margin:7px 0 0;color:#c7a77a;font-size:12px;line-height:1.4;">
                         <i class="fas fa-clock" aria-hidden="true"></i> 🚨 Previsão de entrega: O tempo de chegada varia conforme a distância do lojista até o local do seu veículo. Para alinhar o tempo exato e passar mais detalhes do problema, clique no botão Contatar Lojista.   
                     </p>

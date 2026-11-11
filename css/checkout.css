@@ -149,3 +149,60 @@ body {
         padding: 12px !important; /* Facilita o clique com o dedo */
     }
 }
+
+.resumo-frete-linha,
+.resumo-total-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+}
+
+.resumo-frete-linha {
+    margin-top: 10px;
+    color: #bbb;
+    font-size: 14px;
+}
+
+.resumo-frete-linha strong {
+    color: #eee;
+    font-weight: 700;
+}
+
+.frete-lojas-detalhe {
+    margin-top: 8px;
+    color: #aaa;
+    font-size: 12px;
+    text-align: left;
+}
+
+.frete-loja-linha {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+    border-top: 1px solid #2b2b2b;
+}
+
+.resumo-total-linha {
+    margin-top: 15px;
+    padding-top: 13px;
+    border-top: 1px solid #3a3a3a;
+}
+
+.resumo-total-linha > span {
+    color: #fff;
+    font-weight: 700;
+}
+
+.status-frete-checkout {
+    margin: 12px 0 0;
+    color: #b9a27d;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#paymentBrick_container:empty {
+    display: none;
+}

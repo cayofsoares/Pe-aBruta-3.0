@@ -18,6 +18,13 @@ function apiHeaders(extra = {}) {
 let avisoEnderecoTimeout = null;
 let itensCheckout = [];
 let sequenciaBuscaCEP = 0;
+let sequenciaCotacaoFrete = 0;
+let sequenciaRenderPagamento = 0;
+let checkoutBricksBuilder = null;
+let paymentBrickController = null;
+let cotacaoFreteAtual = null;
+let cepCotado = '';
+let cotacaoFreteEmAndamento = false;
 
 function lerPrecoEmCentavos(valor) {
     const bruto = valor && typeof valor === 'object' && valor.$numberDecimal != null
@@ -27,6 +34,78 @@ function lerPrecoEmCentavos(valor) {
     const partes = texto.match(/^(\d+)(?:\.(\d{1,2}))?$/);
     if (!partes) return null;
     return (Number(partes[1]) * 100) + Number((partes[2] || '').padEnd(2, '0'));
+}
+
+function formatarCentavos(centavos) {
+    const numero = Number(centavos);
+    return (Number.isSafeInteger(numero) ? numero / 100 : 0).toLocaleString('pt-BR', {
+        style: 'currency', currency: 'BRL'
+    });
+}
+
+function obterTokenCheckout() {
+    try {
+        const sessao = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+        return sessionStorage.getItem('token') || sessao.token || sessao.user?.token || '';
+    } catch (erro) {
+        return sessionStorage.getItem('token') || '';
+    }
+}
+
+function atualizarResumoFrete({ subtotalCentavos, freteCentavos, totalCentavos, fretes } = {}) {
+    const subtotal = document.getElementById('subtotalProdutosTela');
+    const frete = document.getElementById('freteTotalTela');
+    const total = document.getElementById('precoProdutoTela');
+    const detalhes = document.getElementById('freteLojasDetalhe');
+    if (subtotal && subtotalCentavos !== undefined && subtotalCentavos !== null) subtotal.textContent = formatarCentavos(subtotalCentavos);
+    if (frete && freteCentavos !== undefined) {
+        frete.textContent = freteCentavos === null ? 'Calculando…' : (freteCentavos === '' ? 'Informe o CEP' : formatarCentavos(freteCentavos));
+    }
+    if (total && totalCentavos !== undefined) total.textContent = totalCentavos === null ? 'Aguardando frete' : formatarCentavos(totalCentavos);
+    if (detalhes) {
+        detalhes.innerHTML = Array.isArray(fretes) ? fretes.map((item) =>
+            `<div class="frete-loja-linha"><span>${escaparHTML(item.nomeLoja || 'Loja')}</span><strong>${formatarCentavos(item.valorCentavos)}</strong></div>`
+        ).join('') : '';
+    }
+}
+
+function escaparHTML(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, (caractere) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[caractere]);
+}
+
+function mostrarStatusFrete(mensagem, erro = false) {
+    const status = document.getElementById('statusFreteCheckout');
+    if (!status) return;
+    status.textContent = mensagem;
+    status.style.color = erro ? '#ff8d7a' : '#b9a27d';
+}
+
+async function desmontarPaymentBrick() {
+    const controller = paymentBrickController;
+    paymentBrickController = null;
+    if (!controller) return;
+    try { await controller.unmount(); }
+    catch (erro) { console.warn('Não foi possível desmontar a interface de pagamento anterior.', erro); }
+}
+
+function invalidarCotacaoFrete() {
+    sequenciaCotacaoFrete += 1;
+    sequenciaRenderPagamento += 1;
+    const sequenciaInvalidacao = sequenciaRenderPagamento;
+    cotacaoFreteAtual = null;
+    cepCotado = '';
+    cotacaoFreteEmAndamento = false;
+    atualizarResumoFrete({ subtotalCentavos: null, freteCentavos: '', totalCentavos: null });
+    mostrarStatusFrete('O CEP foi alterado. Consulte novamente o frete antes de pagar.');
+    desmontarPaymentBrick().finally(() => {
+        if (sequenciaInvalidacao !== sequenciaRenderPagamento || cotacaoFreteAtual) return;
+        const container = document.getElementById('paymentBrick_container');
+        if (container) {
+            container.innerHTML = '<p class="status-frete-checkout">O formulário de pagamento aparecerá depois do cálculo do frete.</p>';
+        }
+    });
 }
 
 function lerItensDaSessao() {
@@ -95,6 +174,17 @@ function configurarBuscaPorCEP() {
     const campoCidade = document.getElementById('enderecoCidade');
     if (!campoCEP || !campoRua || !campoBairro || !campoCidade) return;
 
+    campoCidade.readOnly = true;
+    campoCEP.addEventListener('input', () => {
+        const cepAtual = campoCEP.value.replace(/\D/g, '');
+        if (cepCotado && cepAtual !== cepCotado) {
+            invalidarCotacaoFrete();
+            campoCidade.value = '';
+            campoRua.value = '';
+            campoBairro.value = '';
+        }
+    });
+
     campoCEP.addEventListener('blur', async () => {
         const cepDigitado = campoCEP.value.trim();
         if (!cepDigitado) return;
@@ -105,6 +195,7 @@ function configurarBuscaPorCEP() {
             campoRua.value = '';
             campoBairro.value = '';
             campoCidade.value = '';
+            invalidarCotacaoFrete();
             mostrarAvisoEndereco('CEP inválido. Informe os 8 dígitos para preencher o endereço.');
             return;
         }
@@ -119,6 +210,7 @@ function configurarBuscaPorCEP() {
                 campoRua.value = '';
                 campoBairro.value = '';
                 campoCidade.value = '';
+                invalidarCotacaoFrete();
                 mostrarAvisoEndereco('CEP não encontrado. Confira os números e tente novamente.');
                 return;
             }
@@ -126,12 +218,82 @@ function configurarBuscaPorCEP() {
             campoRua.value = dados.logradouro || '';
             campoBairro.value = dados.bairro || '';
             campoCidade.value = [dados.localidade, dados.uf].filter(Boolean).join(' - ');
+            campoCidade.readOnly = true;
+            await carregarCotacaoFrete(cep);
         } catch (erro) {
             if (buscaAtual !== sequenciaBuscaCEP) return;
             console.error('Erro ao consultar o ViaCEP:', erro);
-            mostrarAvisoEndereco('Não foi possível consultar o CEP agora. Preencha o endereço manualmente.');
+            invalidarCotacaoFrete();
+            mostrarAvisoEndereco('Não foi possível consultar o CEP agora. Tente novamente para calcular o frete.');
         }
     });
+}
+
+async function carregarCotacaoFrete(cep) {
+    if (cotacaoFreteAtual && cep === cepCotado) return;
+    if (cotacaoFreteEmAndamento && cep === cepCotado) return;
+    const sequenciaAtual = ++sequenciaCotacaoFrete;
+    cotacaoFreteEmAndamento = true;
+    cepCotado = cep;
+    cotacaoFreteAtual = null;
+    sequenciaRenderPagamento += 1;
+    await desmontarPaymentBrick();
+    const container = document.getElementById('paymentBrick_container');
+    if (container) container.innerHTML = '<p class="status-frete-checkout">Calculando o frete das lojas…</p>';
+    mostrarStatusFrete('Consultando as tarifas regionais das lojas.');
+    atualizarResumoFrete({ freteCentavos: null, totalCentavos: null, fretes: [] });
+
+    try {
+        const token = obterTokenCheckout();
+        if (!token) throw new Error('Sua sessão expirou. Entre novamente para continuar a compra.');
+        const resposta = await apiFetch(`${API_URL}/frete/cotacao`, {
+            method: 'POST',
+            headers: apiHeaders({
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }),
+            body: JSON.stringify({
+                itens: itensCheckout.map((item) => ({ idProduto: item.idProduto, quantidade: item.quantidade })),
+                enderecoEntrega: { cep }
+            })
+        });
+        const dados = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(dados.error || 'Não foi possível calcular o frete.');
+        if (sequenciaAtual !== sequenciaCotacaoFrete || document.getElementById('enderecoCep').value.replace(/\D/g, '') !== cep) return;
+
+        cotacaoFreteAtual = dados;
+        cepCotado = cep;
+        const itensCotadosPorId = new Map((dados.itens || []).map((item) => [String(item.idProduto), item]));
+        itensCheckout = itensCheckout.map((item) => {
+            const cotado = itensCotadosPorId.get(item.idProduto);
+            return cotado ? {
+                ...item,
+                titulo: cotado.nomeProduto || item.titulo,
+                precoCentavos: Math.round(Number(cotado.subtotalCentavos) / item.quantidade)
+            } : item;
+        });
+        document.getElementById('nomeProdutoTela').textContent = itensCheckout
+            .map((item) => `${item.titulo}${item.quantidade > 1 ? ` (x${item.quantidade})` : ''}`).join(' + ');
+        atualizarResumoFrete({
+            subtotalCentavos: dados.valorProdutosCentavos,
+            freteCentavos: dados.valorFreteCentavos,
+            totalCentavos: dados.valorTotalCentavos,
+            fretes: dados.fretes || []
+        });
+        mostrarStatusFrete('Frete estimado pelas tarifas regionais informadas pelas lojas.');
+        await renderizarFormularioDePagamento(Number(dados.valorTotalCentavos) / 100);
+    } catch (erro) {
+        if (sequenciaAtual !== sequenciaCotacaoFrete) return;
+        cotacaoFreteAtual = null;
+        cepCotado = '';
+        document.getElementById('freteTotalTela').textContent = 'Indisponível';
+        document.getElementById('precoProdutoTela').textContent = 'Aguardando frete';
+        if (container) container.innerHTML = '<p class="status-frete-checkout">O pagamento ficará disponível depois que o frete puder ser calculado.</p>';
+        mostrarStatusFrete(erro.message || 'Não foi possível calcular o frete.', true);
+        mostrarAvisoEndereco(erro.message || 'Não foi possível calcular o frete.');
+    } finally {
+        if (sequenciaAtual === sequenciaCotacaoFrete) cotacaoFreteEmAndamento = false;
+    }
 }
 
 async function carregarCheckout() {
@@ -164,26 +326,24 @@ async function carregarCheckout() {
         window.location.href = 'carrinho.html';
         return;
     }
+    checkoutBricksBuilder = mp.bricks();
     const valorTotal = totalCentavos / 100;
     const nomesItens = itensCheckout.map((item) => `${item.titulo}${item.quantidade > 1 ? ` (x${item.quantidade})` : ''}`).join(' + ');
 
-    // Renderiza o resumo visual
-    document.getElementById('nomeProdutoTela').innerText = nomesItens || nomeProduto;
-    document.getElementById('precoProdutoTela').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-
-    // Inicializa a interface de pagamento
-    renderizarFormularioDePagamento(valorTotal);
+    document.getElementById('nomeProdutoTela').textContent = nomesItens || nomeProduto;
+    atualizarResumoFrete({ subtotalCentavos: totalCentavos, totalCentavos: null });
+    mostrarStatusFrete('Informe o CEP de entrega para calcular o frete regional.');
 }
 
-function renderizarFormularioDePagamento(valorTotal) {
+async function renderizarFormularioDePagamento(valorTotal) {
     const container = document.getElementById('paymentBrick_container');
-    
-    // CORREÇÃO 1: Limpa o container antes de desenhar para evitar formulários duplicados
-    container.innerHTML = ''; 
-    
-    const bricksBuilder = mp.bricks();
-    
-    bricksBuilder.create("payment", "paymentBrick_container", {
+    const sequenciaAtual = ++sequenciaRenderPagamento;
+    await desmontarPaymentBrick();
+    if (sequenciaAtual !== sequenciaRenderPagamento || !cotacaoFreteAtual) return;
+    container.innerHTML = '';
+
+    try {
+        const controller = await checkoutBricksBuilder.create("payment", "paymentBrick_container", {
         initialization: {
             amount: valorTotal,
         },
@@ -209,6 +369,13 @@ function renderizarFormularioDePagamento(valorTotal) {
                     const ehCartaoCredito = tipoPagamento === 'credit_card'
                         || (dadosDeCartaoPresentes && tipoPagamento !== 'debit_card');
                     let parcelasSelecionadas = null;
+
+                    const cepAtual = document.getElementById('enderecoCep').value.replace(/\D/g, '');
+                    if (!cotacaoFreteAtual || !cepAtual || cepAtual !== cepCotado) {
+                        mostrarAvisoEndereco('Calcule novamente o frete pelo CEP antes de pagar.');
+                        reject(new Error('A cotação do frete está desatualizada.'));
+                        return;
+                    }
 
                     const enderecoEntrega = {
                         rua: document.getElementById('enderecoRua').value.trim(),
@@ -341,7 +508,16 @@ function renderizarFormularioDePagamento(valorTotal) {
                 console.error("Erro interno no Brick:", error);
             }
         }
-    });
+        });
+        if (sequenciaAtual !== sequenciaRenderPagamento || !cotacaoFreteAtual) {
+            await controller.unmount();
+            return;
+        }
+        paymentBrickController = controller;
+    } catch (erro) {
+        console.error('Não foi possível renderizar o formulário de pagamento:', erro);
+        mostrarStatusFrete('O frete foi calculado, mas não foi possível abrir o pagamento. Atualize a página e tente novamente.', true);
+    }
 }
 
 // Inicia a aplicação na tela
