@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Peça Bruta">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PEÇA BRUTA | Onde as Oficinas se Encontram</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/peca-bruta-180.png">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
 </head>
@@ -26,12 +32,20 @@
                         <span class="icon">🏢</span> CADASTRAR MINHA EMPRESA
                     </button>
                 </a>
+                <button type="button" class="btn-install" id="btnInstalarAplicativo" style="display: none;">
+                    <span aria-hidden="true">⬇</span> INSTALAR APLICATIVO
+                </button>
             </div>
+        </div>
     </main>
-    <script>
-        function irParaSistema() {
-            window.location.href = 'feed.html';
-        }
-    </script>
+    <dialog class="install-guide" id="installGuide" aria-labelledby="installGuideTitle">
+        <form method="dialog">
+            <button class="install-guide-close" aria-label="Fechar instruções">×</button>
+        </form>
+        <h2 id="installGuideTitle">Instalar Peça Bruta</h2>
+        <p id="installGuideText">Para instalar, abra o menu de compartilhamento do navegador e escolha “Adicionar à Tela de Início”.</p>
+        <button type="button" class="btn-guide-ok" id="btnFecharInstrucoes">Entendi</button>
+    </dialog>
+    <script src="JS/index.js" defer></script>
 </body>
 </html>
