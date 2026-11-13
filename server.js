@@ -16,7 +16,7 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const crypto = require('crypto'); // NOVO: Para gerar tokens de verificação de e-mail
 const nodemailer = require('nodemailer'); // NOVO: Para envio de e-mails
-const TAXA_COMISSAO_PERCENTUAL = 5;
+const TAXA_COMISSAO_PERCENTUAL = 2;
 
 // --- 1. VERIFICAÇÃO OBRIGATÓRIA DE VARIÁVEIS DE AMBIENTE NA INICIALIZAÇÃO ---
 if (!process.env.JWT_SECRET) {
@@ -2195,12 +2195,22 @@ app.get('/api/admin/financeiro/pedidos', verificarToken, exigirPermissao(['admin
             const idLojaInformado = String(pedido.idLoja || '').trim().toLowerCase();
             const loja = lojasPorIdMap.get(idLojaInformado)
                 || lojasPorNomeMap.get(normalizarNomeLoja(pedido.lojaDona));
+            let valorLiquidoCentavos = null;
+            let valorFreteCentavos = null;
+            try {
+                valorLiquidoCentavos = calcularRepassePedidoCentavos(pedido).toString();
+                valorFreteCentavos = valorParaCentavos(String(pedido.valorFrete ?? '0')).toString();
+            } catch (erroValor) {
+                console.warn(`Valores inválidos no pedido ${pedido._id} ao montar o painel financeiro.`);
+            }
             return {
                 ...pedido,
                 nomeCliente: pedido.nomeCliente || nomesClientes.get(String(pedido.idCliente || '')) || 'Cliente não identificado',
                 idLoja: loja ? String(loja._id) : pedido.idLoja,
                 lojaDona: loja?.nome || pedido.lojaDona || 'Loja sem identificação',
                 chavePix: loja?.chavePix || '',
+                valorLiquidoCentavos,
+                valorFreteCentavos,
                 status: repasseConcluido(pedido)
                     ? 'Repasse Concluído'
                     : pedido.recebidoPeloCliente

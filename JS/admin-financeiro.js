@@ -15,8 +15,7 @@ const statusFinanceiro = document.getElementById('status-financeiro');
 const botaoAtualizar = document.getElementById('btn-atualizar');
 const contadorPendentes = document.getElementById('contador-pendentes');
 const contadorHistorico = document.getElementById('contador-historico');
-const formatadorBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const TAXA_COMISSAO_PERCENTUAL = 5;
+const TAXA_COMISSAO_PERCENTUAL = 2;
 const PERCENTUAL_REPASSE_LOJISTA = 100 - TAXA_COMISSAO_PERCENTUAL;
 let tokenAdmin = '';
 let pedidosFinanceiros = [];
@@ -63,17 +62,35 @@ function obterValorBrutoValido(pedido) {
     return Number.isFinite(valor) && valor >= 0 ? valor : null;
 }
 
-function calcularValorLiquido(pedido) {
-    const totalCentavos = Math.round(Number(pedido.valorTotal) * 100);
-    const freteCentavos = Math.round(Number(pedido.valorFrete || 0) * 100);
+function decimalParaCentavos(valor) {
+    const texto = String(valor ?? '').trim().replace(',', '.');
+    const partes = texto.match(/^(\d+)(?:\.(\d{1,2}))?$/);
+    if (!partes) return null;
+    return BigInt(partes[1]) * 100n + BigInt((partes[2] || '').padEnd(2, '0') || '0');
+}
+
+function formatarCentavosBRL(valor) {
+    const centavos = typeof valor === 'bigint' ? valor : BigInt(String(valor));
+    const negativo = centavos < 0n;
+    const absoluto = negativo ? -centavos : centavos;
+    const reais = absoluto / 100n;
+    const fracao = String(absoluto % 100n).padStart(2, '0');
+    return `${negativo ? '-' : ''}R$ ${reais.toLocaleString('pt-BR')},${fracao}`;
+}
+
+function calcularValorLiquidoCentavos(pedido) {
+    if (/^\d+$/.test(String(pedido.valorLiquidoCentavos ?? ''))) {
+        return BigInt(pedido.valorLiquidoCentavos);
+    }
+    const totalCentavos = decimalParaCentavos(pedido.valorTotal);
+    const freteCentavos = decimalParaCentavos(pedido.valorFrete ?? '0');
     const produtoCentavos = pedido.valorProduto === null || pedido.valorProduto === undefined || pedido.valorProduto === ''
-        ? totalCentavos - freteCentavos
-        : Math.round(Number(pedido.valorProduto) * 100);
-    if (!Number.isSafeInteger(totalCentavos) || !Number.isSafeInteger(freteCentavos)
-        || !Number.isSafeInteger(produtoCentavos) || produtoCentavos < 0
-        || freteCentavos < 0 || produtoCentavos + freteCentavos !== totalCentavos) return null;
-    const liquidoCentavos = (BigInt(produtoCentavos) * BigInt(PERCENTUAL_REPASSE_LOJISTA) + 50n) / 100n + BigInt(freteCentavos);
-    return Number(liquidoCentavos) / 100;
+        ? (totalCentavos === null || freteCentavos === null ? null : totalCentavos - freteCentavos)
+        : decimalParaCentavos(pedido.valorProduto);
+    if (totalCentavos === null || freteCentavos === null || produtoCentavos === null
+        || produtoCentavos < 0n || freteCentavos < 0n
+        || produtoCentavos + freteCentavos !== totalCentavos) return null;
+    return (produtoCentavos * BigInt(PERCENTUAL_REPASSE_LOJISTA) + 50n) / 100n + freteCentavos;
 }
 
 function agruparPedidosPorLoja(pedidos) {
@@ -87,7 +104,7 @@ function agruparPedidosPorLoja(pedidos) {
                 nome: String(pedido.lojaDona || 'Loja sem identificação'),
                 chavePix: String(pedido.chavePix || ''),
                 pedidos: [],
-                totalLiquidoCentavos: 0
+                totalLiquidoCentavos: 0n
             };
             grupos.set(chave, grupo);
         }
@@ -97,11 +114,11 @@ function agruparPedidosPorLoja(pedidos) {
         }
 
         const valorBruto = obterValorBrutoValido(pedido);
-        const valorLiquido = valorBruto === null ? null : calcularValorLiquido(pedido);
-        if (valorLiquido !== null && pedido.recebidoPeloCliente === true) {
-            grupo.totalLiquidoCentavos += Math.round(valorLiquido * 100);
+        const valorLiquidoCentavos = valorBruto === null ? null : calcularValorLiquidoCentavos(pedido);
+        if (valorLiquidoCentavos !== null && pedido.recebidoPeloCliente === true) {
+            grupo.totalLiquidoCentavos += valorLiquidoCentavos;
         }
-        grupo.pedidos.push({ ...pedido, valorLiquido });
+        grupo.pedidos.push({ ...pedido, valorLiquidoCentavos });
         return grupos;
     }, new Map());
 }
@@ -133,12 +150,14 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                 const idPedido = escaparHTML(String(pedido._id || '').slice(-8).toUpperCase());
                 const nomeCliente = escaparHTML(pedido.nomeCliente || 'Cliente não identificado');
                 const nomeProduto = escaparHTML(pedido.nomeProduto || 'Produto sem nome');
-                const valorLiquidoTexto = pedido.valorLiquido === null
+                const valorLiquidoTexto = pedido.valorLiquidoCentavos === null
                     ? 'Valor líquido indisponível'
-                    : formatadorBRL.format(pedido.valorLiquido);
-                const valorFrete = Number(pedido.valorFrete || 0);
-                const detalheFrete = Number.isFinite(valorFrete) && valorFrete > 0
-                    ? `<small class="detalhe-valores-pedido">Frete integral para a loja: ${escapar(formatadorBRL.format(valorFrete))}</small>`
+                    : formatarCentavosBRL(pedido.valorLiquidoCentavos);
+                const freteCentavos = /^\d+$/.test(String(pedido.valorFreteCentavos ?? ''))
+                    ? BigInt(pedido.valorFreteCentavos)
+                    : decimalParaCentavos(pedido.valorFrete ?? '0');
+                const detalheFrete = freteCentavos !== null && freteCentavos > 0n
+                    ? `<small class="detalhe-valores-pedido">Frete integral para a loja: ${escapar(formatarCentavosBRL(freteCentavos))}</small>`
                     : '';
                 const tituloBotaoRepasse = 'Registrar que a transferência manual foi concluída';
                 const recebimentoConfirmado = pedido.recebidoPeloCliente === true;
@@ -173,7 +192,7 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                         </div>
                     </article>`;
             }).join('');
-        const vendasSemValor = grupo.pedidos.length - grupo.pedidos.filter((pedido) => pedido.valorLiquido !== null).length;
+        const vendasSemValor = grupo.pedidos.length - grupo.pedidos.filter((pedido) => pedido.valorLiquidoCentavos !== null).length;
         const avisoValor = vendasSemValor
             ? `<p class="aviso-valor">${vendasSemValor} pedido(s) sem valor válido precisam de conferência.</p>`
             : '';
@@ -189,7 +208,7 @@ function renderizarListaPorLoja(pedidos, recipiente, historico = false) {
                             <small>${grupo.pedidos.length} pedido(s) ${historico ? 'no histórico' : 'no fluxo de repasse'}</small>
                         </span>
                     </span>
-                    <span class="total-lojista"><small>${historico ? 'Total líquido repassado' : 'Total liberado para repasse'}</small><strong>${formatadorBRL.format(grupo.totalLiquidoCentavos / 100)}</strong></span>
+                    <span class="total-lojista"><small>${historico ? 'Total líquido repassado' : 'Total liberado para repasse'}</small><strong>${formatarCentavosBRL(grupo.totalLiquidoCentavos)}</strong></span>
                     <i class="fas fa-chevron-up seta-acordeao" aria-hidden="true"></i>
                 </button>
                 <div class="conteudo-lojista" id="${idPainel}">
@@ -207,12 +226,12 @@ function renderizarPedidos(pedidos) {
     const prontosParaRepasse = pendentes.filter((pedido) => pedido.recebidoPeloCliente === true);
     const aguardandoConfirmacaoCliente = pendentes.filter((pedido) => pedido.recebidoPeloCliente !== true);
     const gruposPendentes = [...agruparPedidosPorLoja(pendentes).values()];
-    const pedidosComValor = prontosParaRepasse.filter((pedido) => obterValorBrutoValido(pedido) !== null);
-    const totalLiquidoCentavos = gruposPendentes.reduce((total, grupo) => total + grupo.totalLiquidoCentavos, 0);
+    const pedidosComValor = prontosParaRepasse.filter((pedido) => obterValorBrutoValido(pedido) !== null && calcularValorLiquidoCentavos(pedido) !== null);
+    const totalLiquidoCentavos = gruposPendentes.reduce((total, grupo) => total + grupo.totalLiquidoCentavos, 0n);
 
     document.getElementById('total-pedidos').textContent = pendentes.length.toLocaleString('pt-BR');
     document.getElementById('total-lojistas').textContent = gruposPendentes.length.toLocaleString('pt-BR');
-    document.getElementById('total-liquido').textContent = formatadorBRL.format(totalLiquidoCentavos / 100);
+    document.getElementById('total-liquido').textContent = formatarCentavosBRL(totalLiquidoCentavos);
     contadorPendentes.textContent = `${pendentes.length.toLocaleString('pt-BR')} ${pendentes.length === 1 ? 'pedido' : 'pedidos'}`;
     contadorHistorico.textContent = `${concluidos.length.toLocaleString('pt-BR')} ${concluidos.length === 1 ? 'pedido' : 'pedidos'}`;
 

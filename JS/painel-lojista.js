@@ -1,5 +1,5 @@
 const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
-const TAXA_COMISSAO_PERCENTUAL = 5;
+const TAXA_COMISSAO_PERCENTUAL = 2;
 function apiFetch(url, options = {}) {
     const headers = {
         ...(options.headers || {}),

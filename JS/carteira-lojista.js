@@ -1,5 +1,4 @@
 const API_URL = 'https://pe-abruta-3-0.onrender.com/api';
-const carteiraBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 let tokenLoja = '';
 let carteiraEmAtualizacao = false;
 
@@ -11,7 +10,10 @@ function escaparHTMLCarteira(valor) {
 
 function valorCentavosParaBRL(valor) {
     if (valor === null || valor === undefined || !/^\d+$/.test(String(valor))) return 'Valor indisponível';
-    return carteiraBRL.format(Number(valor) / 100);
+    const centavos = BigInt(String(valor));
+    const reais = centavos / 100n;
+    const fracao = String(centavos % 100n).padStart(2, '0');
+    return `R$ ${reais.toLocaleString('pt-BR')},${fracao}`;
 }
 
 function formatarDataVenda(valor) {
@@ -54,7 +56,7 @@ function desenharVendas(vendas) {
             ? `${escaparHTMLCarteira(venda.statusEntrega)} · aguardando confirmação do cliente`
             : 'Recebimento confirmado · aguardando atualização do repasse';
         const quantidade = Number(venda.quantidade || 1);
-        const valorFrete = venda.valorFreteCentavos && Number(venda.valorFreteCentavos) > 0
+        const valorFrete = /^\d+$/.test(String(venda.valorFreteCentavos ?? '')) && BigInt(venda.valorFreteCentavos) > 0n
             ? `<span>Frete: ${escaparHTMLCarteira(valorCentavosParaBRL(venda.valorFreteCentavos))} (integral à loja)</span>`
             : '';
         return `
